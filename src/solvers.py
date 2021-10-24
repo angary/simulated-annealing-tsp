@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from heapq import heappop, heappush
 from typing import List, Tuple
 from p5.pmath.utils import dist
@@ -125,7 +126,7 @@ class BranchAndBound(Solver):
             return []
 
         # Look at the best possible non complete
-        curr_path = self.paths.pop(0)
+        curr_path = heappop(self.paths)
         curr_node = curr_path.order[-1]
         curr_adj = curr_path.adj
         curr_cost = curr_path.cost
@@ -136,16 +137,16 @@ class BranchAndBound(Solver):
         # Generate their paths
         for next_node in next_nodes:
             # Find the new adj matrix after travelling to the next node
-            new_adj = [[j for j in i] for i in curr_adj]
-            new_adj = set_infty(new_adj, curr_node, next_node)
+            new_adj = set_infty(curr_adj, curr_node, next_node)
 
             # Base cost is the cost of travelling from the curr_node to next_node
             base_cost = curr_adj[curr_node][next_node]
             new_cost = curr_cost + base_cost + reduce_adj(new_adj, self.node_count)
+
             new_order = curr_path.order + [next_node]
 
             heappush(self.paths, BranchAndBoundPath(new_adj, new_cost, new_order))
-
+        
         result = self.get_best_order()
         self.found_best = len(result) == self.node_count
         return result
@@ -173,7 +174,7 @@ def set_infty(arr: List[List[float]], row_idx: int, col_idx: int) -> List[List[f
     Given a 2D square array and the index of a row and column, return a new list
     where the values of the row and col is now set to infinity
     """
-    new_arr = [[j for j in i] for i in arr]
+    new_arr = deepcopy(arr)
     n = len(arr)
     for i in range(n):
         for j in range(n):

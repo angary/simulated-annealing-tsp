@@ -6,7 +6,7 @@ from src.solvers import Solver
 
 WIDTH = 680
 HEIGHT = 480
-CITY_COUNT = 8
+CITY_COUNT = 10
 
 cities = [(randint(0, WIDTH - 1), randint(0, HEIGHT - 1)) for _ in range(CITY_COUNT)]
 order = [i for i in range(CITY_COUNT)]
