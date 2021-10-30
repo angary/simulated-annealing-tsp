@@ -6,17 +6,18 @@ from src.solvers import Solver
 
 WIDTH = 680
 HEIGHT = 480
-CITY_COUNT = 20
 BACKGROUND_COLOUR = (35, 36, 37)
 BEST_PATH_COLOUR = (0, 153, 255)
 CURR_PATH_COLOR = (75, 75, 75)
 
+CITY_COUNT = 100
 cities = [(randint(0, WIDTH - 1), randint(0, HEIGHT - 1)) for _ in range(CITY_COUNT)]
 order = [i for i in range(CITY_COUNT)]
 solver = Solver.get_solver("simulated annealing", cities)
 
+iteration = 0
 
-def main():
+def start():
     run()
     return
 
@@ -28,7 +29,9 @@ def setup():
 
 
 def draw():
-    global cities,order
+    global cities, order, iteration
+    print(iteration)
+    iteration += 1
     
     # Black background
     background(*BACKGROUND_COLOUR)
@@ -58,7 +61,6 @@ def draw():
     if not order:
         no_loop()
         return
-    
     return
 
 
@@ -75,4 +77,4 @@ def draw_path(ordering: List[int]) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    start()

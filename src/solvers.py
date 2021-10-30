@@ -1,7 +1,10 @@
+import math
+
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from heapq import heappop, heappush
 from typing import List, Tuple
+from random import randrange, shuffle, uniform
 from p5.pmath.utils import dist
 
 
@@ -14,7 +17,6 @@ class Solver(ABC):
         self.nodes = nodes
         self.node_count = len(nodes)
         self.order = [i for i in range(self.node_count)]
-        self.best_order = [i for i in range(self.node_count)]
 
     @staticmethod
     def get_solver(solver_name: str, nodes: List[Tuple[int, int]]) -> "Solver":
@@ -26,6 +28,10 @@ class Solver(ABC):
             return BruteForce(nodes)
         if solver_name == "branchandbound":
             return BranchAndBound(nodes)
+        if solver_name == "geneticalgorithm":
+            return GeneticAlgorithm(nodes)
+        if solver_name == "simulatedannealing":
+            return SimulatedAnnealing(nodes)
         raise Exception("Invalid solver name")
 
     def get_total_dist(self, order: List[int]) -> float:
@@ -64,6 +70,7 @@ class BruteForce(Solver):
 
     def __init__(self, nodes):
         super().__init__(nodes)
+        self.best_order = [i for i in range(self.node_count)]
 
     def get_next_order(self) -> List[int]:
         """
@@ -92,7 +99,6 @@ class BruteForce(Solver):
         if new_dist <= curr_dist:
             self.best_order = order
 
-        print(self.order)
         return self.order
 
     def get_best_order(self) -> List[int]:
@@ -105,17 +111,13 @@ class BranchAndBound(Solver):
 
     def __init__(self, nodes):
         super().__init__(nodes)
-        self.order = [0]
-        self.best_order = [0]
         self.adj = [
             [dist(i, j) if i != j else INFTY for i in nodes] for j in nodes
         ]
         self.cost = reduce_adj(self.adj, self.node_count)
-
         adj_arr = self.adj.copy()
         cost = reduce_adj(adj_arr, self.node_count)
         self.paths = [BranchAndBoundPath(adj_arr, cost, [0])]
-
         self.found_best = False
 
     def get_next_order(self) -> List[int]:
@@ -167,8 +169,6 @@ class BranchAndBoundPath:
         return self.cost < other.cost
 
 
-################################################################################
-
 def set_infty(arr: List[List[float]], row_idx: int, col_idx: int) -> List[List[float]]:
     """
     Given a 2D square array and the index of a row and column, return a new list
@@ -218,3 +218,73 @@ def reduce_adj(arr: List[List[float]], n: int) -> int:
                     arr[i][j] -= col_min
 
     return total
+
+
+################################################################################
+
+class GeneticAlgorithm(Solver):
+
+    def __init__(self, nodes, population: int = 10):
+        super().__init__(nodes)
+        self.population = population
+        self.orders = [deepcopy(self.order) for _ in range(population)]
+
+    def get_next_order(self) -> List[int]:
+        pass
+
+    def get_best_order(self) -> List[int]:
+        pass
+
+
+################################################################################
+
+class SimulatedAnnealing(Solver):
+
+    def __init__(self, nodes, cooling_rate: float = 0.99):
+        super().__init__(nodes)
+        shuffle(self.order)
+        self.temperature = 1
+        self.cooling_rate = cooling_rate
+        self.curr_dist = self.get_total_dist(self.order)
+        self.iterations = 0
+
+    def get_next_order(self) -> List[int]:
+        # Lower the temperature
+        self.iterations += 1
+
+        # TODO: Tweak the temperature cooling based off number of nodes
+        self.temperature = self.temperature * 0.0
+
+        # Find new order
+        new_order = swap_two(self.order, self.node_count)
+        new_dist = self.get_total_dist(new_order)
+
+        # Determine if we take it or not
+        # TODO: Include the new temperature change check
+        loss = new_dist / self.curr_dist
+
+        if loss <= 1:
+            # If the new distance is shorter, then we take it
+            self.curr_dist = new_dist
+            self.order = new_order
+        # elif uniform(0, 1) * loss * 2 < self.temperature:
+        #     self.curr_dist = new_dist
+        #     self.order = new_order
+        return self.order
+
+    def get_best_order(self) -> List[int]:
+        return self.order
+
+
+def swap_two(arr: List[int], n: int) -> List[int]:
+    """
+    Reverse the position between two random values in an array,
+    returning the new array
+    """
+    a = randrange(n)
+    b = randrange(n)
+    if b < a:
+        a, b = b, a
+    new_arr = arr[:a + 1] + arr[b:a:-1] + arr[b + 1:]
+    return new_arr
+
