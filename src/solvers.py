@@ -17,6 +17,9 @@ class Solver(ABC):
         self.nodes = nodes
         self.node_count = len(nodes)
         self.order = [i for i in range(self.node_count)]
+        self.adj = [
+            [dist(i, j) if i != j else 0 for i in nodes] for j in nodes
+        ]
 
     @staticmethod
     def get_solver(solver_name: str, nodes: List[Tuple[int, int]]) -> "Solver":
@@ -39,12 +42,10 @@ class Solver(ABC):
         Get the total distance between the nodes based off the ordering
         """
         total = 0
-        nodes = self.nodes
         for i in range(len(order) - 1):
-            a = nodes[order[i]]
-            b = nodes[order[i + 1]]
-            total += dist(a, b)
-        total += dist(nodes[order[-1]], nodes[order[0]])
+            total += self.adj[order[i + 1]][order[i]]
+        total += self.adj[order[-1]][order[0]]
+        print(total)
         return total
 
     @abstractmethod

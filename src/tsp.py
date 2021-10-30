@@ -57,6 +57,8 @@ def draw():
     # Get next ordering
     new_order = order
     while new_order == order:
+        # TODO: Loops infinitely when SA algo does not find a better soln
+        # and temperature is 0
         new_order = solver.get_next_order()
     order = new_order
     if not order:
