@@ -243,7 +243,7 @@ class SimulatedAnnealing(Solver):
     def __init__(self, nodes, cooling_rate: float = 0.99):
         super().__init__(nodes)
         shuffle(self.order)
-        self.temperature = 1
+        self.temperature = 100
         self.cooling_rate = cooling_rate
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
@@ -253,33 +253,35 @@ class SimulatedAnnealing(Solver):
         self.iterations += 1
 
         # TODO: Tweak the temperature cooling based off number of nodes
-        self.temperature = self.temperature * 0.0
+        self.temperature = self.temperature * self.cooling_rate
 
         # Find new order
-        new_order = swap_two(self.order, self.node_count)
+        new_order = two_opt(self.order, self.node_count)
         new_dist = self.get_total_dist(new_order)
 
         # Determine if we take it or not
-        # TODO: Include the new temperature change check
-        loss = new_dist / self.curr_dist
+        loss = new_dist - self.curr_dist
 
-        if loss <= 1:
+        if loss <= 0:
             # If the new distance is shorter, then we take it
             self.curr_dist = new_dist
             self.order = new_order
-        # elif uniform(0, 1) * loss * 2 < self.temperature:
-        #     self.curr_dist = new_dist
-        #     self.order = new_order
+        else:
+            prob = math.exp(-loss / self.temperature)
+            if uniform(0, 1) < prob:
+                self.curr_dist = new_dist
+                self.order = new_order
+
         return self.order
 
     def get_best_order(self) -> List[int]:
         return self.order
 
 
-def swap_two(arr: List[int], n: int) -> List[int]:
+def two_opt(arr: List[int], n: int) -> List[int]:
     """
     Reverse the position between two random values in an array,
-    returning the new array
+    so that the path "uncrosses" itself, and return the new array
     """
     a = randrange(n)
     b = randrange(n)

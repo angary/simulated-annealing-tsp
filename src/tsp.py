@@ -17,6 +17,7 @@ solver = Solver.get_solver("simulated annealing", cities)
 
 iteration = 0
 
+
 def start():
     run()
     return
@@ -30,7 +31,7 @@ def setup():
 
 def draw():
     global cities, order, iteration
-    print(iteration)
+    # print(iteration)
     iteration += 1
     
     # Black background
@@ -44,9 +45,9 @@ def draw():
 
     # Draw current path
     no_fill()
-    stroke(*CURR_PATH_COLOR)
-    stroke_weight(1)
-    draw_path(order)
+    # stroke(*CURR_PATH_COLOR)
+    # stroke_weight(1)
+    # draw_path(order)
 
     # Draw best path
     stroke(*BEST_PATH_COLOUR)
