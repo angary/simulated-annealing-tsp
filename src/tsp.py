@@ -6,11 +6,14 @@ from src.solvers import Solver
 
 WIDTH = 680
 HEIGHT = 480
-CITY_COUNT = 10
+CITY_COUNT = 20
+BACKGROUND_COLOUR = (35, 36, 37)
+BEST_PATH_COLOUR = (0, 153, 255)
+CURR_PATH_COLOR = (75, 75, 75)
 
 cities = [(randint(0, WIDTH - 1), randint(0, HEIGHT - 1)) for _ in range(CITY_COUNT)]
 order = [i for i in range(CITY_COUNT)]
-solver = Solver.get_solver("branch and bound", cities)
+solver = Solver.get_solver("simulated annealing", cities)
 
 
 def main():
@@ -20,7 +23,7 @@ def main():
 
 def setup():
     size(WIDTH, HEIGHT)
-    background(0)
+    background(*BACKGROUND_COLOUR)
     return
 
 
@@ -28,26 +31,30 @@ def draw():
     global cities,order
     
     # Black background
-    background(0)
+    background(*BACKGROUND_COLOUR)
 
     # Draw cities
+    fill(*BEST_PATH_COLOUR)
     for i, city in enumerate(cities):
-        ellipse(city[0], city[1], 4, 4)
-        text(str(i), city[0], city[1])
-    
+        ellipse(city[0], city[1], 6, 6)
+        # text(str(i), city[0], city[1])
+
     # Draw current path
     no_fill()
-    stroke(75)
+    stroke(*CURR_PATH_COLOR)
     stroke_weight(1)
     draw_path(order)
 
     # Draw best path
-    stroke(255, 0, 0)
+    stroke(*BEST_PATH_COLOUR)
     stroke_weight(2)
     draw_path(solver.get_best_order())
 
     # Get next ordering
-    order = solver.get_next_order()
+    new_order = order
+    while new_order == order:
+        new_order = solver.get_next_order()
+    order = new_order
     if not order:
         no_loop()
         return
