@@ -28,9 +28,9 @@ def load_cities(filepath: str) -> List[Tuple[float, float]]:
     cities = []
     with open(filepath, "r") as f:
         lines = f.readlines()
-        start = lines.index("NODE_COORD_SECTION\n")
+        start = lines.index("NODE_COORD_SECTION\n") + 1
         end = lines.index("EOF\n")
-        lines = lines[start + 1:end]
+        lines = lines[start:end]
         for line in lines:
             coords = list(map(float, line.split()[1:]))
             coords.reverse()

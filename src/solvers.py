@@ -3,7 +3,7 @@ import math
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from heapq import heappop, heappush
-from functools import reduce
+from math import factorial
 from typing import List, Tuple
 from random import randrange, shuffle, uniform
 from p5.pmath.utils import dist
@@ -46,21 +46,29 @@ class Solver(ABC):
         for i in range(len(order) - 1):
             total += self.adj[order[i + 1]][order[i]]
         total += self.adj[order[-1]][order[0]]
-        print(total)
         return total
+
+    @abstractmethod
+    def solve(self) -> None:
+        """
+        Loop the get_next_order() method until the solver
+        has found the optimal (or what it determines) to be
+        the optimal solution
+        """
+        pass
 
     @abstractmethod
     def get_next_order(self) -> List[int]:
         """
         Returns the list of the next ordering of the path.
-        Returns an empty list if there is no more orderings.
+        @return an empty list if there is no more orderings.
         """
         pass
 
     @abstractmethod
     def get_best_order(self) -> List[int]:
         """
-        Return the list of the current best ordering.
+        @return the list of the current best ordering.
         """
         pass
 
@@ -70,13 +78,26 @@ class Solver(ABC):
 
 class SimulatedAnnealing(Solver):
 
-    def __init__(self, nodes, cooling_rate: float = 0.99):
+    def __init__(self, nodes, temperature: float = None, cooling_rate: float = None):
         super().__init__(nodes)
         shuffle(self.order)
-        self.temperature = 100
-        self.cooling_rate = cooling_rate
+        self.temperature = temperature if temperature else 10000
+        self.cooling_rate = cooling_rate if cooling_rate else 0.99999
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
+
+    def solve(self):
+        repeat = 0
+        order = []
+        while repeat < 1000:
+            # TODO: Change to use max iteration
+            new_order = self.get_next_order()
+            if order == new_order:
+                repeat += 1
+            else:
+                repeat = 0
+                order = new_order
+        return
 
     def get_next_order(self) -> List[int]:
         # Lower the temperature
@@ -88,6 +109,7 @@ class SimulatedAnnealing(Solver):
         # Find new order
         new_order = two_opt(self.order, self.node_count)
         new_dist = self.get_total_dist(new_order)
+        print(f"{new_dist = } \t{self.temperature = }")
 
         # Determine if we take it or not
         loss = new_dist - self.curr_dist
@@ -129,6 +151,11 @@ class BruteForce(Solver):
     def __init__(self, nodes):
         super().__init__(nodes)
         self.best_order = [i for i in range(self.node_count)]
+
+    def solve(self) -> None:
+        for _ in range(factorial(self.node_count - 1)):
+            self.get_next_order()
+        return
 
     def get_next_order(self) -> List[int]:
         """
@@ -178,6 +205,12 @@ class BranchAndBound(Solver):
         cost = reduce_adj(adj_arr, self.node_count)
         self.paths = [BranchAndBoundPath(adj_arr, cost, [0])]
         self.found_best = False
+
+    def solve(self) -> None:
+        order = self.get_best_order()
+        while len(order) < self.node_count:
+            order = self.get_best_order()
+        return
 
     def get_next_order(self) -> List[int]:
         """
