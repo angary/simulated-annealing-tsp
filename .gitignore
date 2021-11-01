@@ -151,3 +151,6 @@ report/*
 
 .vscode/
 .idea/
+
+results/*
+!results/.gitkeep
