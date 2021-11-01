@@ -21,6 +21,7 @@ The goal of this project is to:
 | [report](report) | The report detailing the Simulated Annealing and the experimentation |
 | [results](results) | The output directory containing results of the tests |
 | [src/main.py](src/main.py) | Driver code to start the visualisation |
+| [src/setup.py](src/setup.py) | Code for loading in city coordinates from a file, or generating random ones |
 | [src/solvers.py](src/solvers.py) | Module containing the python implementations of TSP solving algorithms |
 
 Note that this project uses the [p5py](https://github.com/p5py/p5) library for visualisation which may have some issues running on Windows.

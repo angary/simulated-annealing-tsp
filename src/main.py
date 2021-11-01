@@ -1,10 +1,12 @@
 import argparse
+
 from typing import List
 from p5 import *
 from random import randint
 
-from src.solvers import Solver
 from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR, CURR_PATH_COLOUR
+from src.setup import get_random_cities, load_cities, normalise_coords
+from src.solvers import Solver
 
 
 city_count = 0
@@ -20,12 +22,21 @@ def main() -> None:
     args = parse_args()
     city_count = args.city_count
     solver_name = args.solver
+    filepath = args.file
 
-    cities = [(randint(0, WIDTH - 1), randint(0, HEIGHT - 1)) for _ in range(city_count)]
+    if filepath:
+        print("There was a filepath specified")
+        loaded_cities = load_cities(filepath)
+        print("Loaded the cities")
+        solver = Solver.get_solver(solver_name, loaded_cities)
+        cities = normalise_coords(loaded_cities, HEIGHT, WIDTH)
+    else:
+        cities = get_random_cities(HEIGHT, WIDTH, city_count)
+        solver = Solver.get_solver(solver_name, cities)
     order = [i for i in range(city_count)]
-    solver = Solver.get_solver(solver_name, cities)
 
     run()
+
     return
 
 
@@ -96,6 +107,13 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default="simulated annealing",
         help="the type of tsp solver to use"
+    )
+    parser.add_argument(
+        "-f",
+        "--file",
+        type=str,
+        default=None,
+        help="the filename of the tsp problem - if none is selected, then a random problem is generated"
     )
     return parser.parse_args()
 
