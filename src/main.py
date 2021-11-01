@@ -2,9 +2,8 @@ import argparse
 
 from typing import List
 from p5 import *
-from random import randint
 
-from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR, CURR_PATH_COLOUR
+from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR
 from src.setup import get_random_cities, load_cities, normalise_coords
 from src.solvers import Solver
 
@@ -14,6 +13,9 @@ cities = []
 order = []
 solver = Solver.get_solver("simulated annealing", cities)
 iteration = 0
+
+
+city_drawings = None
 
 
 def main() -> None:
@@ -27,7 +29,7 @@ def main() -> None:
     if filepath:
         print("There was a filepath specified")
         loaded_cities = load_cities(filepath)
-        print("Loaded the cities")
+        print(f"Loaded the cities {loaded_cities = }")
         solver = Solver.get_solver(solver_name, loaded_cities)
         cities = normalise_coords(loaded_cities, HEIGHT, WIDTH)
     else:
@@ -43,6 +45,8 @@ def main() -> None:
 def setup() -> None:
     size(WIDTH, HEIGHT)
     background(*BG_COLOUR)
+    fill(*BEST_PATH_COLOUR)
+    no_fill()
     return
 
 
@@ -51,16 +55,7 @@ def draw() -> None:
     iteration += 1
     background(*BG_COLOUR)
 
-    # Draw cities
-    fill(*BEST_PATH_COLOUR)
-    for i, city in enumerate(cities):
-        ellipse(city[0], city[1], 6, 6)
-
-    # Draw current path
-    no_fill()
-    # stroke(*CURR_PATH_COLOR)
-    # stroke_weight(1)
-    # draw_path(order)
+    # Can draw cities here, but very computationally intensive
 
     # Draw best path
     stroke(*BEST_PATH_COLOUR)
