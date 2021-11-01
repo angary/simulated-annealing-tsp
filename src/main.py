@@ -4,18 +4,13 @@ from p5 import *
 from random import randint
 
 from src.solvers import Solver
+from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR, CURR_PATH_COLOUR
 
-WIDTH = 680
-HEIGHT = 480
-BACKGROUND_COLOUR = (35, 36, 37)
-BEST_PATH_COLOUR = (0, 153, 255)
-CURR_PATH_COLOR = (75, 75, 75)
 
 city_count = 0
 cities = []
 order = []
 solver = Solver.get_solver("simulated annealing", cities)
-
 iteration = 0
 
 
@@ -36,23 +31,19 @@ def main() -> None:
 
 def setup() -> None:
     size(WIDTH, HEIGHT)
-    background(*BACKGROUND_COLOUR)
+    background(*BG_COLOUR)
     return
 
 
 def draw() -> None:
     global cities, order, iteration
-    # print(iteration)
     iteration += 1
-    
-    # Black background
-    background(*BACKGROUND_COLOUR)
+    background(*BG_COLOUR)
 
     # Draw cities
     fill(*BEST_PATH_COLOUR)
     for i, city in enumerate(cities):
         ellipse(city[0], city[1], 6, 6)
-        # text(str(i), city[0], city[1])
 
     # Draw current path
     no_fill()
@@ -67,19 +58,11 @@ def draw() -> None:
 
     # Get next ordering
     new_order = order
-    i = 0
     while new_order == order:
-        # TODO: Loops infinitely when SA algo does not find a better soln
-        # and temperature is 0
-        if i == 500:
-            no_loop()
-            return
         new_order = solver.get_next_order()
-        i += 1
     order = new_order
     if not order:
         no_loop()
-        return
     return
 
 
