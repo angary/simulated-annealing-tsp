@@ -41,6 +41,8 @@ class Solver(ABC):
         """
         Get the total distance between the nodes based off the ordering
         """
+        if not order:
+            return 0
         total = 0
         for i in range(len(order) - 1):
             total += self.adj[order[i + 1]][order[i]]
