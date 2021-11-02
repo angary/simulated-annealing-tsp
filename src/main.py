@@ -55,17 +55,26 @@ def draw() -> None:
     background(*BG_COLOUR)
 
     # Can draw cities here, but very computationally intensive
+    # fill(*BG_COLOUR)
+    # for city in cities:
+    #     ellipse(city[0], city[1], 4, 4)
+    # no_fill()
 
     # Draw best path
     stroke(*BEST_PATH_COLOUR)
     stroke_weight(2)
     draw_path(solver.get_best_order())
 
+    # Speed up drawing
+    for _ in range(2000):
+        solver.get_next_order()
+    
     # Get next ordering
     new_order = order
     while new_order == order:
         new_order = solver.get_next_order()
     order = new_order
+    print(solver.get_total_dist(order))
     if not order:
         no_loop()
     return

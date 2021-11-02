@@ -80,8 +80,8 @@ class SimulatedAnnealing(Solver):
     def __init__(self, nodes, temperature: float = None, cooling_rate: float = None):
         super().__init__(nodes)
         shuffle(self.order)
-        self.temperature = temperature if temperature else 10000
-        self.cooling_rate = cooling_rate if cooling_rate else 0.99999
+        self.temperature = temperature if temperature else 100
+        self.cooling_rate = cooling_rate if cooling_rate else 0.999995
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
 

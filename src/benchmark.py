@@ -36,8 +36,10 @@ def benchmark_all(t: int, r: int) -> dict[str, dict[str, float]]:
     @return: a dictionary mapping from filename to test results
     """
 
-    # Get all the problem files
-    data_files = [os.path.join("data", f) for f in os.listdir("data") if ".tsp" in f]
+    # Get all the problem files that have solutions
+    all_files = os.listdir("data")
+    problems = set(map(remove_file_extension, all_files))
+    data_files = [f"data/{f}" for f in problems if f"{f}.opt.tour" in all_files]
 
     # Sort them by the number of nodes
     data_files.sort(key=lambda name: int("".join([s for s in name if s.isdigit()])))
@@ -45,7 +47,6 @@ def benchmark_all(t: int, r: int) -> dict[str, dict[str, float]]:
     # Loop through each file and then test the file
     results = {}
     for file in data_files:
-        file = remove_file_extension(file)
         results[file] = benchmark(file, t, r)
 
     return results
