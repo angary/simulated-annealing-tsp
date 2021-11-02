@@ -1,8 +1,7 @@
 from random import randint
-from typing import List, Tuple
 
 
-def get_random_cities(height: int, width: int, n: int) -> List[Tuple[int, int]]:
+def get_random_cities(height: int, width: int, n: int) -> list[tuple[int, int]]:
     """
     Generate a series of random coordinates within the bounds of the
     height and width
@@ -18,7 +17,7 @@ def get_random_cities(height: int, width: int, n: int) -> List[Tuple[int, int]]:
     return cities
 
 
-def load_cities(filepath: str) -> List[Tuple[float, float]]:
+def load_cities(filepath: str) -> list[tuple[float, float]]:
     """
     Load the cities in from a file, returning a list of the cities coordinates
 
@@ -38,7 +37,7 @@ def load_cities(filepath: str) -> List[Tuple[float, float]]:
     return cities
 
 
-def normalise_coords(cities: List[Tuple[float, float]], height: int, width: int) -> List[Tuple[int, int]]:
+def normalise_coords(cities: list[tuple[float, float]], height: int, width: int) -> list[tuple[int, int]]:
     """
     Given the list of cities, return a new list, which ensures that the
     coordinates are all positive and scale their values so they all lie

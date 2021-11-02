@@ -1,6 +1,5 @@
 import argparse
 
-from typing import List
 from p5 import *
 
 from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR
@@ -72,7 +71,7 @@ def draw() -> None:
     return
 
 
-def draw_path(ordering: List[int]) -> None:
+def draw_path(ordering: list[int]) -> None:
     """
     Draw the path of the cities
 

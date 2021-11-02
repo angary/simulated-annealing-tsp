@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from heapq import heappop, heappush
 from math import factorial
-from typing import List, Tuple
 from random import randrange, shuffle, uniform
 from p5.pmath.utils import dist
 
@@ -14,7 +13,7 @@ INFTY = float("inf")
 
 class Solver(ABC):
 
-    def __init__(self, nodes: List[Tuple[int, int]]):
+    def __init__(self, nodes: list[tuple[int, int]]):
         self.nodes = nodes
         self.node_count = len(nodes)
         self.order = [i for i in range(self.node_count)]
@@ -23,7 +22,7 @@ class Solver(ABC):
         ]
 
     @staticmethod
-    def get_solver(solver_name: str, nodes: List[Tuple[int, int]]) -> "Solver":
+    def get_solver(solver_name: str, nodes: list[tuple[int, int]]) -> "Solver":
         """
         Return a new solver based off the name
         """
@@ -36,7 +35,7 @@ class Solver(ABC):
             return SimulatedAnnealing(nodes)
         raise Exception("Invalid solver name")
 
-    def get_total_dist(self, order: List[int]) -> float:
+    def get_total_dist(self, order: list[int]) -> float:
         """
         Get the total distance between the nodes based off the ordering
         """
@@ -58,7 +57,7 @@ class Solver(ABC):
         pass
 
     @abstractmethod
-    def get_next_order(self) -> List[int]:
+    def get_next_order(self) -> list[int]:
         """
         Returns the list of the next ordering of the path.
         @return an empty list if there is no more orderings.
@@ -66,7 +65,7 @@ class Solver(ABC):
         pass
 
     @abstractmethod
-    def get_best_order(self) -> List[int]:
+    def get_best_order(self) -> list[int]:
         """
         @return the list of the current best ordering.
         """
@@ -99,7 +98,7 @@ class SimulatedAnnealing(Solver):
                 order = new_order
         return
 
-    def get_next_order(self) -> List[int]:
+    def get_next_order(self) -> list[int]:
         # Lower the temperature
         self.iterations += 1
 
@@ -119,10 +118,10 @@ class SimulatedAnnealing(Solver):
 
         return self.order
 
-    def get_best_order(self) -> List[int]:
+    def get_best_order(self) -> list[int]:
         return self.order
 
-    def get_two_nodes(self) -> Tuple[int, int]:
+    def get_two_nodes(self) -> tuple[int, int]:
         """
         @return: two indexes between 0 and n, where the first is smaller
         """
@@ -178,7 +177,7 @@ class BruteForce(Solver):
             self.get_next_order()
         return
 
-    def get_next_order(self) -> List[int]:
+    def get_next_order(self) -> list[int]:
         """
         Returns the next path in lexicographical ordering
         """
@@ -207,7 +206,7 @@ class BruteForce(Solver):
 
         return self.order
 
-    def get_best_order(self) -> List[int]:
+    def get_best_order(self) -> list[int]:
         return self.best_order
 
 
@@ -233,7 +232,7 @@ class BranchAndBound(Solver):
             order = self.get_best_order()
         return
 
-    def get_next_order(self) -> List[int]:
+    def get_next_order(self) -> list[int]:
         """
         Returns the next optimal path that we have found so far
         """
@@ -266,7 +265,7 @@ class BranchAndBound(Solver):
         self.found_best = len(result) == self.node_count
         return result
 
-    def get_best_order(self) -> List[int]:
+    def get_best_order(self) -> list[int]:
         order = self.paths[0].order
         return order
 
@@ -276,7 +275,7 @@ class BranchAndBound(Solver):
 
 class BranchAndBoundPath:
 
-    def __init__(self, adj: List[List[float]], cost: float, order: List[int]):
+    def __init__(self, adj: list[list[float]], cost: float, order: list[int]):
         self.adj = adj
         self.cost = cost
         self.order = order
@@ -285,7 +284,7 @@ class BranchAndBoundPath:
         return self.cost < other.cost
 
 
-def set_infty(arr: List[List[float]], row_idx: int, col_idx: int) -> List[List[float]]:
+def set_infty(arr: list[list[float]], row_idx: int, col_idx: int) -> list[list[float]]:
     """
     Given a 2D square array and the index of a row and column, return a new list
     where the values of the row and col is now set to infinity
@@ -299,7 +298,7 @@ def set_infty(arr: List[List[float]], row_idx: int, col_idx: int) -> List[List[f
     return new_arr
 
 
-def reduce_adj(arr: List[List[float]], n: int) -> int:
+def reduce_adj(arr: list[list[float]], n: int) -> int:
     """
     Subtract the minimum value of each row from the row, and subtract the
     minimum value of each col from the col. Then return the total subtracted

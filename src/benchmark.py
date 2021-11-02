@@ -1,6 +1,5 @@
 import argparse
-
-from typing import List
+import os
 
 from src.setup import load_cities
 from src.solvers import SimulatedAnnealing
@@ -12,6 +11,56 @@ def main() -> None:
     t = args.temperature
     r = args.cooling_rate
 
+    if filename:
+        filename = remove_file_extension(filename)
+        results = {
+            filename: benchmark(filename, t, r)
+        }
+    else:
+        results = benchmark_all(t, r)
+
+    for file, results in results.items():
+        print(file)
+        for key, val in results.items():
+            print(key, val)
+
+    return
+
+
+def benchmark_all(t: int, r: int) -> dict[str, dict[str, float]]:
+    """
+    Test the solver against all the files in the data folder
+
+    @param t: the temperature
+    @param r: the cooling rate
+    @return: a dictionary mapping from filename to test results
+    """
+
+    # Get all the problem files
+    data_files = [os.path.join("data", f) for f in os.listdir("data") if ".tsp" in f]
+
+    # Sort them by the number of nodes
+    data_files.sort(key=lambda name: int("".join([s for s in name if s.isdigit()])))
+
+    # Loop through each file and then test the file
+    results = {}
+    for file in data_files:
+        file = remove_file_extension(file)
+        results[file] = benchmark(file, t, r)
+
+    return results
+
+
+def benchmark(filename: str, t: int, r: int) -> dict[str, float]:
+    """
+    Benchmark the simulated annealing solver against a dataset
+
+    @param filename: the name of the tsp problem data
+    @param t: the temperature
+    @param r: the cooling rate
+    @return: a dictionary containing test results
+    """
+
     # Find file names
     prob_file = f"{filename}.tsp"
     soln_file = f"{filename}.opt.tour"
@@ -20,23 +69,23 @@ def main() -> None:
     loaded_cities = load_cities(prob_file)
     soln_order = load_soln(soln_file)
 
+    # Get the solver's solution
     solver = SimulatedAnnealing(loaded_cities, temperature=t, cooling_rate=r)
     solver.solve()
     solver_order = solver.get_best_order()
 
-    print(len(soln_order))
-    print(len(solver_order))
-
     soln_dist = solver.get_total_dist(soln_order)
     solver_dist = solver.get_total_dist(solver_order)
-    optimality = soln_dist / solver_dist
-    print(f"{soln_dist = }")
-    print(f"{solver_dist = }")
-    print(f"{optimality = }")
-    return
+
+    # Return a dictionary containing test results
+    return {
+        "soln_dist": soln_dist,
+        "solver_dist": solver_dist,
+        "optimality": soln_dist / solver_dist
+    }
 
 
-def load_soln(filepath: str) -> List[int]:
+def load_soln(filepath: str) -> list[int]:
     """
     Loads and returns the optimal solution from the given file path
 
@@ -50,11 +99,21 @@ def load_soln(filepath: str) -> List[int]:
         return list(map(lambda x: int(x) - 1, lines[start:end]))
 
 
+def remove_file_extension(filename: str) -> str:
+    """
+    @param filename: the filename to remove the extension from
+    @return: the filename without the file extension
+    """
+    if "." in filename:
+        filename = filename[:filename.index(".")]
+    return filename
+
+
 def parse_args() -> argparse.Namespace:
     """
-    Parse command line arguments
+    Parse commandline arguments
 
-    @return: object containing file argument
+    @return: object containing commandline arguments
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -62,7 +121,7 @@ def parse_args() -> argparse.Namespace:
         "--file",
         type=str,
         default=None,
-        help="the filename of the tsp problem without the file extension"
+        help="the filename of the tsp problem - if nothing is specified all files are tested"
     )
     parser.add_argument(
         "-t",
