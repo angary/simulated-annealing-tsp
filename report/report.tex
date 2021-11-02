@@ -1,16 +1,28 @@
 \documentclass{article}
 
 \usepackage[utf8]{inputenc}
+\usepackage{caption}
+\usepackage{csquotes}
 \usepackage{enumerate}
+\usepackage{float}
+\usepackage{graphicx}
 \usepackage{mathtools}
 \usepackage{pgfplots}
-\usepackage{tikz} 
+\usepackage{subcaption}
+\usepackage{tikz}
+\usepackage[a4paper, total={6in, 8in}]{geometry}
+
+% Remove References from BibTeX heading
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+
+
 \setlength\parindent{0pt}
 
 
 \title{
-    General NP-Hard Solvers \\
-    \large applied to the \\
+    Parameterised Temperature and Cooling Rate \\
+    \large for Simulated Annealing applied to the \\
     Travelling Salesman Problem
 }
 
@@ -22,62 +34,87 @@
 
 \maketitle
 
+\begin{abstract}
+    In this paper, we explore the impact of different values of initial temperatures and cooling rates for Simulated Annealing.
+    These values are bench marked using the Travelling Salesman Problem, to determine the impact of the values for different inputs. 
+    Finally, we determine if there is a correlation between the ideal initial temperature and cooling rate with the given problem model, and subsequently a way to parameterise the temperature and cooling rate based off the input.
+\end{abstract}
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
 \section{Introduction}
-\subsection{NP-Hard Problems}
-NP-hard (non-deterministic polynomial-time hard) problems are those that are 
-\begin{itemize}
-    \item verifiable in polynomial time by a deterministic turing machine OR
-    \item solvable in polynomial time by a non-deterministic turing machine
-\end{itemize}
-
-Due to their difficulty in solving, there tends to be a general algorithms.
-
 \subsection{The Travelling Salesman Problem}
 The travelling salesman is an example of an NP-hard combinatorial optimisation problem.
 
 It goes as follows:
-
+\begin{quote}
 Given a weighted graph, starting at a vertex, find the minimal cost to travel to all the vertices of the graph once, before returning back to the starting vertex.
+\end{quote}
+
+It has many applications, both in practise and theory i.e. in logistics (determining an optimal route of least cost), job scheduling (determine the best way to schedule a series of jobs on a set of machines) and also for bench marking optimisation algorithms
 \\
-It has many applications, i.e. in
+
+The specific purpose of this project is to explore the "Symmetric" Travelling Salesman Problem, where it is an undirected graph, i.e. there is no direction in the graph.
+Whilst this halves the number of solutions as compared to the asymmetric TSP, it still has a super-polynomial running time as the number of solutions for $n$ cities is $(n - 1)! / 2$.
+
+\begin{figure}[h]
+    \centering
+    \begin{tabular}{ |c|c| } 
+        \hline
+        City Count & Path Configurations \\ 
+        \hline
+        3 & 1 \\
+        \hline
+        5 & 12 \\
+        \hline
+        10 & $1.81 \times 10^{4}$ \\ 
+        \hline
+        20 & $6.08 \times 10^{16}$ \\
+        \hline
+        30 & $4.42 \times 10^{30}$ \\
+        \hline
+    \end{tabular}
+    \caption{Number of path configurations per number of cities}
+\end{figure}
+
+\subsection{Algorithms for the Travelling Salesman Problem}
+
+Due to the difficult nature of solving the TSP, there are two main categories of algorithms.
 
 \begin{itemize}
-    \item logistics (determining an optimal route of least cost)
-    \item the manufacturing of microchips (determining the path of a soldering iron which has to react all contacts.
+    \item Exact algorithms
+    \item Approximate algorithms
 \end{itemize}
 
-\section{Deterministic Algorithms}
+Exact algorithms have the benefit that they are able to find the optimal solution.
+For example, the current record for the largest TSP problem is 85 900 cities which was solved using an ILP formulation \cite{cook12}.
+However, they suffer from a longer runtime. \\
 
-W
+On the other hand approximate algorithms may be find a near optimal, whilst running relatively quickly \cite{helsgaun98}.
+Hence, in practise, if the optimal is not required, it is suitable to use an approximate algorithm.
+An example of common algorithm which can be applied for finding approximate solutions for TSP is Simulated Annealing.
 
-\subsection{Brute Force}
-
-Whilst it is the least efficient algorithm to solve this, it is worth going over its procedure.
-
-
-\subsection{Branch and Bound}
-
-A branch and bound algorithm is one that explores certain candidate solutions a
-
-\section{Non-Deterministic Algorithms}
-
-\subsection{Genetic Algorithm}
-
-\subsection{Simulated Annealing}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Simulated Annealing}
 Simulated Annealing is a stochastic global search optimisation algorithm.
-It can be used to find an approx global minimum or maximum and may be preferred over exact algorithms due to faster runtime.
+Whilst greedy searches may get stuck in a local minimum, Simulated Annealing aims to overcome this by probabilistically accepting worse options, and has a higher chance of finding the global minimum.
 \\
 
-\subsubsection{Origin}
+\subsection{Origin}
 It is based off annealing in metallurgy, where the structure of the material changes randomly rapidly. when the temperature is high.
 As a result, at the beginning, SA may choose a solution, even if does not lead to an improvement in the objective function.
+\\
 
 However, overtime as the temperature drops and loses its internal energy, the structure settles into a more stable form.
 Hence, as the temperature drops, the SA algorithm will with a higher probability discard solutions that do not improve the objective function, and always choosing those that improve the objective function.
+\\
 
 Finally, the resulting material structure reaches its absolute (global) minimum internal energy configuration.
 Similarly, the SA algorithm will then find an approximate (or the) solution for maximising the objective function.
+\\
 
 Note the temperature and cooling rate has to be carefully selected.
 If the temperature cools too fast, then in the process may get stuck at a local minimum. 
@@ -85,7 +122,7 @@ This is similar to what happens in a greedy method, where the search gets stuck 
 Hence, the introduction of the temperature, and probabilistic acceptance of worse states allows for a higher chance of finding the global minimum.
 \\
 
-\subsubsection{Process}
+\subsection{Process}
 
 \begin{enumerate}[Step 1:]
     \item Choose a suitable initial temperature $T_0$, cooling rate $r < 1$, a feasible solution $\mathbf{x}^{(0)}$, iteration counter $k = 0$, and the objective function $f$.
@@ -97,32 +134,171 @@ Hence, the introduction of the temperature, and probabilistic acceptance of wors
         \exp {\left( \frac{\Delta f}{T_k} \right)} & else
     \end{dcases*}
     $$
-    \item Set $k = k + 1$, and $T_k = r T_k$, then go to Step 2
+    \item If we have reached the max iterations, then stop
+    \item Else, set $k = k + 1$, and $T_k = r T_k$, then go to Step 2
 \end{enumerate}
 
+\subsection{Temperature and Cooling Rate}
 
-\subsubsection{Selecting of Ideal Variables}
+The initial temperature of the system determines how likely it is to accept worse solutions.
+As shown in the selection function $\exp(\frac{\Delta f}{T})$ the temperature of the system should be proportional to the possible loss.
+Hence, \textbf{the temperature should be proportional to how far apart the cities are} to retain the same probability of choosing a worse configuration.
 
-\textbf{Selection Probability}
-
-FIX UP
-
-Although dependent on the Temperature and Objective Function, the selection function penalises a possible solution proportional to how much worse it is.
-
-To do this, we use the Boltzmann Distribution, where
-
-$$p_i \propto \exp \left( \frac{- \epsilon_i}{kT} \right)$$
-
-$p_i$ is the new state, $\epsilon_i$, is the energy of the state, $k$ is Boltzmann's constant, and $T$ is the temperature.
-
-As a result, we can see that the greater the energy, the exponentially lower the probability it is chosen, however, the probability is still greater at higher temperatures.
-
-\begin{figure}[!h]
+\begin{figure}[H]
     \centering
     \begin{tikzpicture}
         \begin{axis}[
-            xlabel = Cost,
-            ylabel = Probability of being chosen
+            width=0.5\textwidth,
+            height=0.3\textwidth,
+            xlabel=Time,
+            ylabel=Temperature,
+        ]
+        \addplot[
+            color=orange,
+            domain=1:800
+        ]
+        {1000 * 0.995^x};
+        \addlegendentry{$T = 1000 \times 0.995^x$}
+        \addplot[
+            color=brown,
+            domain=1:800
+        ]
+        {500 * 0.995^x};
+        \addlegendentry{$T = 500 \times 0.995^x$}
+        \addplot[
+            color=red,
+            domain=1:800
+        ]
+        {200 * 0.995^x};
+        \addlegendentry{$T = 200 \times 0.995^x$}
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Comparison of different initial temperatures}
+\end{figure}
+
+
+The cooling rate on the other hand determines the rate of change of the probability that we accept worse configurations.
+\\
+
+Whilst there are different cooling schedules, geometric cooling tends to perform well compared to other general methods \cite{cooling}.
+This is due to high temperatures at the beginning allowing for more searching, whilst low temperatures later allows it to converge to a solution quickly.
+\\
+
+Ignoring other properties, denser materials cool slower.
+If the TSP behaves like so, \textbf{the greater the number of cities, the slower the system should cool} as it is "denser".
+Furthermore, if the number of cities is greater, there may also more local minimums, which can be mitigated by slower cooling.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                xlabel=Time,
+                ylabel=Temperature,
+                width=1\textwidth,
+                height=0.7\textwidth,
+            ]
+            \addplot[
+                color=brown,
+                domain=1:100
+            ]
+            {100 - x};
+            \addlegendentry{Linear}
+            \addplot[
+                color=red,
+                domain=1:100
+            ]
+            {100 * 0.95^x};
+            \addlegendentry{Exponential}
+            \addplot[
+                color=black,
+                domain=1:100
+            ]
+            {350/(1 + 10 * log10(1 + x))};
+            \addlegendentry{Logarithmic}
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Comparison of different cooling schedules}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                xlabel=Time,
+                ylabel=Temperature,
+                width=1\textwidth,
+                height=0.7\textwidth,
+            ]
+            \addplot[
+                color=brown,
+                domain=1:800
+            ]
+            {100 * 0.995^x};
+            \addlegendentry{$T = 100 \times 0.995^x$}
+            \addplot[
+                color=red,
+                domain=1:800
+            ]
+            {100 * 0.99^x};
+            \addlegendentry{$T = 100 \times 0.99^x$}
+            \addplot[
+                color=black,
+                domain=1:800
+            ]
+            {100 * 0.95^x};
+            \addlegendentry{$T = 100 \times 0.95^x$}
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Comparison of different cooling rates}
+    \end{subfigure}
+    \caption{Examples of different cooling schedules and rates}
+\end{figure}
+
+Hence, we shall try to parameterise the temperature by the weights of the paths, and the cooling rate by the density of the graph.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Implementation}
+
+
+\subsection{Selection of Controlled Variables}
+
+\textbf{Objective Function}
+
+Given a set of $n$ cities, where $c_{i,j}$ represents the cost of travelling between $i$ and $j$, the objective function is to
+
+$$\text{minimise}\left( \sum_{1 \leq i < n} c_{o_i, o_{i + 1}} + c_{n, 1}\right)$$
+
+where $o_i = j$ means that city $j$ is in position $i$ of the path.
+\\
+
+\textbf{Selection Probability}
+
+Although dependent on the temperature, the selection function penalises the selection of a local possible path configuration proportional to how much worse it is than the current path.
+
+To do this, we use the Boltzmann Distribution,
+
+$$p_i \propto \exp \left( \frac{- \epsilon_i}{kT} \right),$$
+
+where
+\begin{itemize}
+    \item $p_i$ is the probability of choosing the state $i$,
+    \item $\epsilon_i$ is the energy of the state (in our model, it is the cost of going from our state to the next)
+    \item $k$ is Boltzmann's constant (ignored in our model)
+    \item $T$ is the current temperature of the system
+\end{itemize}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            width=0.5\textwidth,
+            height=0.4\textwidth,
+            xlabel=Cost of new path configuration,
+            ylabel=Probability of being chosen
         ]
         \addplot[
             color=orange,
@@ -150,24 +326,20 @@ As a result, we can see that the greater the energy, the exponentially lower the
         \addlegendentry{T = 1}
         \end{axis}
     \end{tikzpicture}
+    \caption{Relationship between change in path cost and probability of selection}
 \end{figure}
 
-\textbf{Temperature, Cooling Rate, and Max Iterations}
-
-The greater the number of cities, the larger the search space, and hence greater chance of being stuck in a location minimum.
-As a result, the temperature needs to be higher, or the cooling rate lower.
-
-ADD MORE
+As a result, we can see that the greater the energy, the exponentially lower the probability it is chosen, however, the probability is still greater at higher temperatures.
 \\
 
-\textbf{Local Search}
+\textbf{Local Search (2 opt)}
 
 It is an important part of the algorithm to determine an algorithm to search for nearby possible solutions.
 A well known method is the \textbf{two-opt} method.
 This involves selecting two random cities, re-orders the route between each other so that it does not.
 \\
 
-The example below shows before (on the left), and after reversing the order between nodes B and E (on the right).
+The example below shows before ($A \rightarrow B \rightarrow D \rightarrow C \rightarrow E \rightarrow F$) on the left, and after reversing the order between nodes B and E ($A \rightarrow B \rightarrow C \rightarrow D \rightarrow E \rightarrow F$) on the right.
 
 \begin{figure}[!h]
     \centering
@@ -200,8 +372,52 @@ The example below shows before (on the left), and after reversing the order betw
         \path [-](D) edge node[left] {} (E);
         \path [-](E) edge node[left] {} (F);
     \end{tikzpicture}
+    \caption{two-opt between B and E}
 \end{figure}
 
-Note that the one of the most modern methods is the LKH (Lin–Kernighan heuristic), however, this is a variation of the two-opt and three-opt method.
+In the above scenario, the "before" distance will be shorter than the "after" distance if
+
+$$\text{distance}(B, D) + \text{distance}(C, E) < \text{distance}(B, C) + \text{distance}(D, E)$$
+
+which can be calculated in $O(1)$, whilst applying the two-opt runs in $O(n)$.
+Hence, in the implementation, the loss of the new path configuration is calculated first before the path is changed. \\
+
+Note that a more optimal method is the LKH (Lin–Kernighan heuristic), however, this is a largely a variation of the two-opt and three-opt method.
+However, because of its difficulty in implementation \cite{helsgaun98}, and the main focus is on the temperature and cooling rate, only two-opt been implemented.
+
+\subsection{Code}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Experimentation}
+
+\subsection{Testing}
+The SA algorithm was then tested on datasets from TSPLIB \cite{tsplib} (a public library for Travelling Salesman problem instances) with different initial temperatures and cooling rates.
+
+\subsection{Results}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Conclusion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{References}
+\bibliographystyle{standard}
+\begin{thebibliography}{9}
+
+\bibitem{cook12}
+Cook, William J. (2012) \emph{In Pursuit of the Traveling Salesman: Mathematics at the Limit of Computation.} Princeton, NJ: Princeton UP
+
+\bibitem{helsgaun98}
+K. Helsgaun, (1998) \emph{An Effective Implementation of the Lin-Kernighan Traveling Salesman Heuristic. DATALOGISKE SKRIFTER (Writings on Computer Science), No. 81} Roskilde University.
+
+\bibitem{tsplib}
+G. Reinelt, (1991) \emph{TSPLIB - A Traveling Salesman Problem Library”,} ORSA J. Comput., 3-4, 376-385.
+
+\bibitem{cooling}
+Mahdi, Walid & Medjahed, Seyyid Ahmed \& Ouali, Mohammed. (2017) \emph{Performance Analysis of Simulated Annealing Cooling Schedules in the Context of Dense Image Matching.} Computación y Sistemas. 21. 493-501. 10.13053/CyS-21-3-2553. 
+\end{thebibliography}
 
 \end{document}
