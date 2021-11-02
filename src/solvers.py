@@ -107,40 +107,61 @@ class SimulatedAnnealing(Solver):
         self.temperature = self.temperature * self.cooling_rate
 
         # Find new order
-        new_order = two_opt(self.order, self.node_count)
-        new_dist = self.get_total_dist(new_order)
-        print(f"{new_dist = } \t{self.temperature = }")
+        a, b = self.get_two_nodes()
+        loss = self.get_swap_cost(a, b)
+        prob = 0 if loss <= 0 else math.exp(-loss / self.temperature)
+        # print(f"{self.curr_dist = } \t{self.temperature = } \t{loss = }")
 
-        # Determine if we take it or not
-        loss = new_dist - self.curr_dist
-
-        if loss <= 0:
-            # If the new distance is shorter, then we take it
-            self.curr_dist = new_dist
-            self.order = new_order
-        else:
-            prob = math.exp(-loss / self.temperature)
-            if uniform(0, 1) < prob:
-                self.curr_dist = new_dist
-                self.order = new_order
+        # If new distance shorter, or within probability then use it
+        if loss <= 0 or uniform(0, 1) < prob:
+            self.two_opt(a, b)
+            self.curr_dist = self.get_total_dist(self.order)
 
         return self.order
 
     def get_best_order(self) -> List[int]:
         return self.order
 
+    def get_two_nodes(self) -> Tuple[int, int]:
+        """
+        @return: two indexes between 0 and n, where the first is smaller
+        """
+        a = randrange(self.node_count)
+        b = randrange(self.node_count)
+        return (a, b) if a < b else (b, a)
 
-def two_opt(arr: List[int], n: int) -> List[int]:
-    """
-    Reverse the position between two random values in an array,
-    so that the path "uncrosses" itself, and return the new array
-    """
-    a = randrange(n)
-    b = randrange(n)
-    if b < a:
-        a, b = b, a
-    new_arr = arr[:a + 1] + arr[b:a:-1] + arr[b + 1:]
-    return new_arr
+    def get_swap_cost(self, a: int, b: int) -> float:
+        """
+        Given two indexes, return the cost if we were to reverse the
+        ordering between the two indexes
+
+        @param a: the lower index
+        @param b: the higher index
+        @return: the change in distance after the swap
+        """
+        # Get distance from a to next val
+        n = self.node_count
+
+        a1 = self.order[a]
+        a2 = self.order[(a + 1) % n]
+        b1 = self.order[b]
+        b2 = self.order[(b + 1) % n]
+
+        # Find the current and new distance
+        curr_dist = self.adj[a1][a2] + self.adj[b1][b2]
+        new_dist = self.adj[a1][b1] + self.adj[a2][b2]
+
+        return new_dist - curr_dist
+
+    def two_opt(self, a: int, b: int) -> None:
+        """
+        Reverse the position between two values in the ordering,
+        so that the path "uncrosses" itself
+
+        @param a: the lower index
+        @param b: the higher index
+        """
+        self.order = self.order[:a + 1] + self.order[b:a:-1] + self.order[b + 1:]
 
 
 ################################################################################
