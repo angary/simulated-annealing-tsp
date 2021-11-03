@@ -55,7 +55,7 @@ class Solver(ABC):
         divide it by the number of cities
         @return:
         """
-        return sum([sum(row) for row in self.adj]) / self.node_count
+        return sum([sum(row) for row in self.adj]) / (self.node_count ** 2 * 2)
 
     @abstractmethod
     def solve(self) -> None:

@@ -9,8 +9,8 @@ from src.solvers import SimulatedAnnealing
 
 
 TEST_REPEATS = 20
-TEMPERATURES = [1_000, 10_000, 100_000]
-COOLING_RATES = [0.99, 0.999, 0.9_999]
+TEMPERATURES = [10, 50, 100, 500, 1_000, 5_000]
+COOLING_RATES = [0.999, 0.9_995, 0.9_999, 0.99_995]
 
 
 def main() -> None:
@@ -45,6 +45,7 @@ def benchmark_all() -> None:
 
     # Sort them by the number of nodes
     data_files.sort(key=lambda name: int("".join([s for s in name if s.isdigit()])))
+
     # Loop through each file and then test the file
     for data_file in data_files:
         problem = data_file.removeprefix("data/")
