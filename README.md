@@ -1,4 +1,9 @@
-# Simulated Annealing for TSP
+# Paramterised Simulated Annealing for TSP
+
+<p align="center">
+  <img src="examples/world-tsp.gif" alt="animated" />
+</p>
+
 
 ## Abstract
 
