@@ -9,8 +9,8 @@ from src.solvers import SimulatedAnnealing
 
 
 TEST_REPEATS = 20
-TEMPERATURES = [100, 1_000, 10_000, 100_000, 1_000_000]
-COOLING_RATES = [0.9, 0.99, 0.999, 0.9999, 0.99999]
+TEMPERATURES = [100, 1_000, 10_000]
+COOLING_RATES = [0.9, 0.99, 0.999]
 
 
 def main() -> None:

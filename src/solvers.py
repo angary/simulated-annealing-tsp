@@ -123,7 +123,7 @@ class SimulatedAnnealing(Solver):
         # Find new order
         a, b = self.get_two_nodes()
         loss = self.get_swap_cost(a, b)
-        prob = 0 if loss <= 0 else math.exp(-loss / self.temperature)
+        prob = 0 if (loss <= 0 or self.temperature <= 0) else math.exp(-loss / self.temperature)
 
         # If new distance shorter, or within probability then use it
         if loss <= 0 or uniform(0, 1) < prob:
