@@ -96,7 +96,9 @@ def key_pressed(event) -> None:
         else:
             loop()
         paused = not paused
+
     elif event.key == "c":
+        # TODO: Show cities if it is paused
         global show_cities
         show_cities = not show_cities
     return

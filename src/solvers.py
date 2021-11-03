@@ -49,6 +49,14 @@ class Solver(ABC):
         total += self.adj[order[-1]][order[0]]
         return total
 
+    def avg_city_dist(self) -> float:
+        """
+        Find the sum of the paths between all the cities and then
+        divide it by the number of cities
+        @return:
+        """
+        return sum([sum(row) for row in self.adj]) / self.node_count
+
     @abstractmethod
     def solve(self) -> None:
         """
@@ -79,19 +87,24 @@ class Solver(ABC):
 
 class SimulatedAnnealing(Solver):
 
-    def __init__(self, nodes, temperature: float = None, cooling_rate: float = None):
+    def __init__(self, nodes, temperature: float = -1, cooling_rate: float = -1):
         super().__init__(nodes)
         shuffle(self.order)
-        self.temperature = temperature if temperature else 100
-        self.cooling_rate = cooling_rate if cooling_rate else 0.9999
+        self.temperature = temperature if temperature != -1 else 100
+        self.cooling_rate = cooling_rate if cooling_rate != -1 else 0.9999
+        self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
+        self.max_repeats = 1000
 
-    def solve(self):
+    def solve(self) -> None:
+        """
+        Continue cooling and finding distance until the optimal distance has
+        not changed after self.max_repeats iterations
+        """
         repeat = 0
         order = []
-        while repeat < 1000:
-            # TODO: Change to use max iteration
+        while repeat < self.max_repeats:
             new_order = self.get_next_order()
             if order == new_order:
                 repeat += 1
@@ -111,7 +124,6 @@ class SimulatedAnnealing(Solver):
         a, b = self.get_two_nodes()
         loss = self.get_swap_cost(a, b)
         prob = 0 if loss <= 0 else math.exp(-loss / self.temperature)
-        # print(f"{self.curr_dist = } \t{self.temperature = } \t{loss = }")
 
         # If new distance shorter, or within probability then use it
         if loss <= 0 or uniform(0, 1) < prob:
