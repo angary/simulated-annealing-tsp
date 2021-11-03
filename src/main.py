@@ -9,15 +9,17 @@ from src.setup import get_random_cities, load_cities, normalise_coords
 from src.solvers import Solver
 
 
+# Problem variables
 city_count = 0
 cities = []
 order = []
 solver = Solver.get_solver("simulated annealing", cities)
 iteration = 0
 
-
+# Visualisation variables
 paused = False
 show_cities = False
+speed = 1
 
 
 def main() -> None:
@@ -67,7 +69,7 @@ def draw() -> None:
         draw_cities()
 
     # Speed up drawing
-    for _ in range(2000):
+    for _ in range(city_count * speed):
         solver.get_next_order()
     
     # Get next ordering
@@ -86,9 +88,11 @@ def key_pressed(event) -> None:
     Handle key press events
     On space-bar press it toggles pause
     On "c" press, it toggles showing the cities
+    On an arrow press, it reduces or increases the frequency of the drawing
 
     @param event: the keypress event
     """
+    global paused, show_cities, speed
     if event.key == " ":
         global paused
         if not paused:
@@ -101,6 +105,17 @@ def key_pressed(event) -> None:
         # TODO: Show cities if it is paused
         global show_cities
         show_cities = not show_cities
+    
+    elif event.key == "LEFT":
+        # Halve the speed
+        speed = max(1, speed // 2)
+        print(f"{speed = }")
+    
+    elif event.key == "RIGHT":
+        # Double the speed
+        speed = min(128, speed * 2)
+        print(f"{speed = }")
+    
     return
 
 
