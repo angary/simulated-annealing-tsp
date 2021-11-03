@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 
 from abc import ABC, abstractmethod
@@ -81,7 +83,7 @@ class SimulatedAnnealing(Solver):
         super().__init__(nodes)
         shuffle(self.order)
         self.temperature = temperature if temperature else 100
-        self.cooling_rate = cooling_rate if cooling_rate else 0.999995
+        self.cooling_rate = cooling_rate if cooling_rate else 0.9999
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
 

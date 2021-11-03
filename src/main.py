@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import argparse
 
 from p5 import *
 
-from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR
+from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR, CITY_SIZE
 from src.setup import get_random_cities, load_cities, normalise_coords
 from src.solvers import Solver
 
@@ -14,8 +16,7 @@ solver = Solver.get_solver("simulated annealing", cities)
 iteration = 0
 
 
-city_drawings = None
-
+paused = False
 
 def main() -> None:
     global city_count, cities, order, solver
@@ -54,16 +55,14 @@ def draw() -> None:
     iteration += 1
     background(*BG_COLOUR)
 
-    # Can draw cities here, but very computationally intensive
-    # fill(*BG_COLOUR)
-    # for city in cities:
-    #     ellipse(city[0], city[1], 4, 4)
-    # no_fill()
-
     # Draw best path
     stroke(*BEST_PATH_COLOUR)
     stroke_weight(2)
     draw_path(solver.get_best_order())
+
+    # Can draw cities here, but very computationally intensive
+    if paused:
+        draw_cities()
 
     # Speed up drawing
     for _ in range(2000):
@@ -77,6 +76,37 @@ def draw() -> None:
     print(solver.get_total_dist(order))
     if not order:
         no_loop()
+    return
+
+
+def key_pressed(event) -> None:
+    """
+    If the space key is pressed, and the player is paused
+    unpause the player, else if it is un-paused, then pause the player
+
+    @param event: the keypress event
+    """
+    if event.key == " ":
+        global paused
+        if not paused:
+            draw_cities()
+            no_loop()
+            paused = True
+        else:
+            loop()
+            paused = False
+    return
+
+
+def draw_cities() -> None:
+    """
+    Given the cities, draw then out on the screen
+    """
+    global cities
+    fill(*BEST_PATH_COLOUR)
+    for x, y in cities:
+        ellipse(x, y, CITY_SIZE, CITY_SIZE)
+    no_fill()
     return
 
 
