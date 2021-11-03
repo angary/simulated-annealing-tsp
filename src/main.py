@@ -17,6 +17,8 @@ iteration = 0
 
 
 paused = False
+show_cities = False
+
 
 def main() -> None:
     global city_count, cities, order, solver
@@ -61,7 +63,7 @@ def draw() -> None:
     draw_path(solver.get_best_order())
 
     # Can draw cities here, but very computationally intensive
-    if paused:
+    if show_cities:
         draw_cities()
 
     # Speed up drawing
@@ -81,20 +83,22 @@ def draw() -> None:
 
 def key_pressed(event) -> None:
     """
-    If the space key is pressed, and the player is paused
-    unpause the player, else if it is un-paused, then pause the player
+    Handle key press events
+    On space-bar press it toggles pause
+    On "c" press, it toggles showing the cities
 
     @param event: the keypress event
     """
     if event.key == " ":
         global paused
         if not paused:
-            draw_cities()
             no_loop()
-            paused = True
         else:
             loop()
-            paused = False
+        paused = not paused
+    elif event.key == "c":
+        global show_cities
+        show_cities = not show_cities
     return
 
 
