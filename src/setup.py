@@ -37,7 +37,7 @@ def load_cities(filepath: str) -> list[tuple[float, float]]:
     return cities
 
 
-def normalise_coords(cities: list[tuple[float, float]], height: int, width: int) -> list[tuple[int, int]]:
+def normalise_coords(cities: list[tuple[float, float]], height: int, width: int, border: int) -> list[tuple[int, int]]:
     """
     Given the list of cities, return a new list, which ensures that the
     coordinates are all positive and scale their values so they all lie
@@ -61,16 +61,16 @@ def normalise_coords(cities: list[tuple[float, float]], height: int, width: int)
     min_y = max(-min_y, 0)
 
     # Find scaling factor
-    scale_x = (width - 1) / (max_x + min_x)
-    scale_y = (height - 1) / (max_y + min_y)
+    scale_x = (width - border * 2) / (max_x + min_x)
+    scale_y = (height - border * 2) / (max_y + min_y)
 
     # Choose the smaller scale to prevent overflow
-    scale = min(scale_x, scale_y)
+    # scale = min(scale_x, scale_y)
 
     normalised = []
     for c in cities:
         # Ensure that all the cities are properly scaled
-        normalised_x = int(scale * (c[0] + min_x))
-        normalised_y = height - int(scale * (c[1] + min_y))
+        normalised_x = int(scale_x * (c[0] + min_x)) + border
+        normalised_y = height - int(scale_y * (c[1] + min_y)) - border
         normalised.append((normalised_x, normalised_y))
     return normalised

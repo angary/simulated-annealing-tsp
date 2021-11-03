@@ -4,7 +4,7 @@ import argparse
 
 from p5 import *
 
-from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR, CITY_SIZE
+from src.config import WIDTH, HEIGHT, BG_COLOUR, BEST_PATH_COLOUR, CITY_SIZE, BORDER
 from src.setup import get_random_cities, load_cities, normalise_coords
 from src.solvers import Solver
 
@@ -35,7 +35,7 @@ def main() -> None:
         loaded_cities = load_cities(filepath)
         print(f"Loaded the cities {loaded_cities = }")
         solver = Solver.get_solver(solver_name, loaded_cities)
-        cities = normalise_coords(loaded_cities, HEIGHT, WIDTH)
+        cities = normalise_coords(loaded_cities, HEIGHT, WIDTH, BORDER)
     else:
         cities = get_random_cities(HEIGHT, WIDTH, city_count)
         solver = Solver.get_solver(solver_name, cities)
@@ -113,7 +113,7 @@ def key_pressed(event) -> None:
     
     elif event.key == "RIGHT":
         # Double the speed
-        speed = min(128, speed * 2)
+        speed = min(256, speed * 2)
         print(f"{speed = }")
     
     return

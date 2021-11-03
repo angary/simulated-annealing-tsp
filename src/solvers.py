@@ -91,7 +91,7 @@ class SimulatedAnnealing(Solver):
         super().__init__(nodes)
         shuffle(self.order)
         self.temperature = temperature if temperature != -1 else 100
-        self.cooling_rate = cooling_rate if cooling_rate != -1 else 0.9999
+        self.cooling_rate = cooling_rate if cooling_rate != -1 else 0.999995
         self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
