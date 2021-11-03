@@ -9,8 +9,8 @@ from src.solvers import SimulatedAnnealing
 
 
 TEST_REPEATS = 20
-TEMPERATURES = [100, 1_000, 10_000]
-COOLING_RATES = [0.9, 0.99, 0.999]
+TEMPERATURES = [1_000, 10_000, 100_000]
+COOLING_RATES = [0.99, 0.999, 0.9_999]
 
 
 def main() -> None:
@@ -45,20 +45,19 @@ def benchmark_all() -> None:
 
     # Sort them by the number of nodes
     data_files.sort(key=lambda name: int("".join([s for s in name if s.isdigit()])))
-
     # Loop through each file and then test the file
     for data_file in data_files:
-        problem = data_file.lstrip("data/")
+        problem = data_file.removeprefix("data/")
 
         # Test what happens when temperature is 0 (doesn't matter what cooling rate is
         greedy_results = [benchmark(data_file, 0, 0) for _ in range(TEST_REPEATS)]
-        write_results(problem, 0, 0, greedy_results)
+        print(write_results(problem, 0, 0, greedy_results))
 
         # Test for combination of temperature and cooling rates
         for t in TEMPERATURES:
             for r in COOLING_RATES:
                 results = [benchmark(data_file, t, r) for _ in range(TEST_REPEATS)]
-                write_results(problem, t, r, results)
+                print(write_results(problem, t, r, results))
     return
 
 
