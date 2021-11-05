@@ -7,11 +7,7 @@ import os
 from src.setup import load_cities
 from src.solvers import SimulatedAnnealing
 
-
-TEST_REPEATS = 20
-TEMPERATURES = [10, 50, 100, 500, 1_000, 5_000]
-COOLING_RATES = [0.999, 0.9_995, 0.9_999, 0.99_995]
-
+from src.config import TEST_REPEATS, TEMPERATURES, COOLING_RATES
 
 def main() -> None:
     args = parse_args()
