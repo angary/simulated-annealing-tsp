@@ -3,6 +3,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{caption}
 \usepackage{csquotes}
+\usepackage{multicol}
 \usepackage{enumerate}
 \usepackage{float}
 \usepackage{graphicx}
@@ -16,19 +17,22 @@
 \usepackage{etoolbox}
 \patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
 
+% Path for images
+\graphicspath{ {./images/} }
+
 
 \setlength\parindent{0pt}
 
 
 \title{
-    Parameterised Temperature and Cooling Rate \\
+    Parameterising Temperature and Cooling Rate \\
     \large for Simulated Annealing applied to the \\
     Travelling Salesman Problem
 }
 
 \author{Gary Sun}
 
-\date{}
+\date{2021}
 
 \begin{document}
 
@@ -391,11 +395,158 @@ However, because of its difficulty in implementation \cite{helsgaun98}, and the 
 \newpage
 \section{Experimentation}
 
-\subsection{Testing}
-The SA algorithm was then tested on datasets from TSPLIB \cite{tsplib} (a public library for Travelling Salesman problem instances) with different initial temperatures and cooling rates.
+\subsection{TSP Dataset Test}
+First the SA algorithm was benchmarked with TSPLIB \cite{tsplib} (a public library for TSP instances) with different initial temperatures and cooling rates.
+The problems sets that were used are listed below
 
-\subsection{Results}
+\begin{multicols}{6}
+\begin{verbatim}
+a280.tsp
+att48.tsp
+berlin52.tsp
+ch130.tsp
+ch150.tsp
+gr666.tsp
+pcb442.tsp
+pr1002.tsp
+pr2392.tsp
+rd100.tsp
+tsp225.tsp
+ulysses22.tsp
+\end{verbatim}
+\end{multicols}
 
+To conduct a test, the SA algorithm would be bench marked, with a temperature and cooling rate of 0.
+Then it would be run again with different combinations of temperature and cooling rates.
+All of these tests would then be repeated multiple times as each run of SA can produce very different results.
+The algorithm was then determined to have "finished" after it did not find a better solution after 1000 iterations.
+\\
+
+The following variables were used:
+
+\begin{verbatim}
+    TEST_REPEATS = 20
+    TEMPERATURES = [10, 50, 100, 500, 1000, 5000]
+    COOLING_RATES = [0.999, 0.9995, 0.9999, 0.99995]
+\end{verbatim}
+
+where TEST\_REPEATS is the number of time each test was repeated, TEMPERATURE is the initial temperature, and COOLING\_RATE is how much the temperature decreases each iteration.
+
+\subsubsection{Results}
+
+\begin{figure}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|c| } 
+        \hline
+        Cooling Rate & Mean Optimality & Optimality Std Dev & Mean Iterations \\ 
+        \hline
+        0       & 0.7206 & 0.2151 & 69942 \\
+        \hline
+        0.999   & 0.7190 & 0.2151 & 71486 \\
+        \hline
+        0.9995  & 0.7214 & 0.2165 & 73394 \\ 
+        \hline
+        0.9999  & 0.7388 & 0.2263 & 94316 \\
+        \hline
+        0.99995 & 0.7549 & 0.2287 & 125381 \\
+        \hline
+    \end{tabular}
+    \caption{Comparison of cooling rates in first test round}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|c| } 
+        \hline
+        Temperature & Mean Optimality & Optimality Std Dev & Mean Iterations \\ 
+        \hline
+        0    & 0.7206 & 0.2151 & 69942 \\
+        \hline
+        10   & 0.7236 & 0.2171 & 74344 \\
+        \hline
+        50   & 0.7343 & 0.2207 & 81645 \\
+        \hline
+        100  & 0.7341 & 0.2230 & 84811 \\ 
+        \hline
+        500  & 0.7381 & 0.2233 & 95380 \\
+        \hline
+        1000 & 0.7367 & 0.2245 & 99195 \\
+        \hline
+        5000 & 0.7343 & 0.2245 & 111490 \\
+        \hline
+    \end{tabular}
+    \caption{Comparison of initial temperatures in first test round}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{images/optimality_city_count.jpg}
+        \caption{Comparison between greedy and SA for each city count}
+        \label{fig:sub1}
+    \end{subfigure}%
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{images/optimality_cooling_rate.jpg}
+        \caption{Optimality for each cooling rate}
+        \label{fig:sub2}
+    \end{subfigure}
+    \caption{Visualisation between optimality, city counts, and cooling rate}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{images/optimality_city_dist.jpg}
+        \caption{Comparison between greedy and SA for each city distance}
+        \label{fig:sub1}
+    \end{subfigure}%
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{images/optimality_temperature.jpg}
+        \caption{Optimality for each temperature}
+        \label{fig:sub2}
+    \end{subfigure}
+    \caption{Visualisation between optimality, city distances and temperatures}
+\end{figure}
+
+\subsubsection{Discussion}
+
+From these results there are a couple observations that we can make
+\begin{itemize}
+    \item There is a negative exponential correlation between city count and temperature, however, there was a lack of correlation between city distance and optimality
+    \item The higher the cooling rate, the better the optimality, however, there is no benefit to constantly increasing the temperature
+    \item There was a logarithmic trend between cooling rate and iterations, and also a logarithmic trend between initial temperature and iterations
+\end{itemize}
+
+However, there are also issues that need to be addressed
+\begin{itemize}
+    \item gr666.tsp is an outlier, is a dense cluster of cities, whilst the rest are sparsely scattered, resulting in a higher average optimality as despite perhaps having a bad path configuration - because so many cities were close, the change in distance was small)
+\end{itemize}
+
+To get more meaningful results, there needed to be a greater increase in the range of the cooling rate to determine the limit of a higher cooling rate.
+The problem set used for the TSP problem also needs to be better controlled, as the impact of temperature on optimality for different temperatures could not be determined as optimality was more dependent on the number of cities.
+
+\subsection{Random Dataset Test}
+In this new test, rather than using TSPLIB problems, our own data will be produced randomly, where we can vary or keep constant variables such as the city count and distance.
+
+The following variables were changed to be:
+
+\begin{verbatim}
+    TEST_REPEATS = 30
+    TEMPERATURES = [10, 100, 1000, 10000]
+    COOLING_RATES = [0.999, 0.9999, 0.99999, 0.999999]
+\end{verbatim}
+
+
+\subsubsection{Results}
+
+\subsubsection{Discussion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
@@ -417,7 +568,7 @@ K. Helsgaun, (1998) \emph{An Effective Implementation of the Lin-Kernighan Trave
 G. Reinelt, (1991) \emph{TSPLIB - A Traveling Salesman Problem Library”,} ORSA J. Comput., 3-4, 376-385.
 
 \bibitem{cooling}
-Mahdi, Walid & Medjahed, Seyyid Ahmed \& Ouali, Mohammed. (2017) \emph{Performance Analysis of Simulated Annealing Cooling Schedules in the Context of Dense Image Matching.} Computación y Sistemas. 21. 493-501. 10.13053/CyS-21-3-2553. 
+Mahdi, Walid \& Medjahed, Seyyid Ahmed \& Ouali, Mohammed. (2017) \emph{Performance Analysis of Simulated Annealing Cooling Schedules in the Context of Dense Image Matching.} Computación y Sistemas. 21. 493-501. 10.13053/CyS-21-3-2553. 
 \end{thebibliography}
 
 \end{document}
