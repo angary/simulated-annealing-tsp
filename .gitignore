@@ -152,5 +152,9 @@ report/*
 .vscode/
 .idea/
 
+# CSv files from benchmarking
 results/*
 !results/.gitkeep
+
+# Randomy generated problems
+data/rand*

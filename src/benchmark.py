@@ -3,19 +3,29 @@ from __future__ import annotations
 import argparse
 import csv
 import os
+import random
 
-from src.config import *
-from src.setup import load_cities
+from src.config import \
+    TSPLIB_TEST_REPEATS, TSPLIB_TEMPERATURES, TSPLIB_COOLING_RATES, \
+    MAP_SIZES, CITY_COUNTS, \
+    RAND_TEMPERATURES, RAND_TEST_REPEATS, RAND_COOLING_RATES
+from src.setup import get_random_cities, load_cities
 from src.solvers import SimulatedAnnealing
 
 
 def main() -> None:
     args = parse_args()
+    gen_rand_data = args.gen_rand_data
     filename = args.file
     t = args.temperature
     r = args.cooling_rate
 
-    if filename:
+    if gen_rand_data:
+        # Generate random maps
+        random.seed(args.seed)
+        gen_rand_cities()
+        benchmark_all(True)
+    elif filename:
         # If we are given a file, print out the results
         filename = remove_file_extension(filename)
         results = benchmark(filename, t, r)
@@ -24,20 +34,68 @@ def main() -> None:
             print(key, val)
     else:
         # Else run tests on all the problems, and write results to results folder
-        benchmark_all()
+        benchmark_all(False)
     return
 
 
-def benchmark_all() -> None:
+def gen_rand_cities() -> None:
+    """
+    Generate a series of random city maps
+    """
+    avg_count = CITY_COUNTS[len(CITY_COUNTS) // 2]
+    avg_size = MAP_SIZES[len(MAP_SIZES) // 2]
+
+    # Generate random maps with different city count
+    for city_count in CITY_COUNTS:
+        cities = get_random_cities(avg_size, avg_size, city_count)
+        save_cities_into_file(cities, avg_size)
+
+    # Generate random maps with different sizes
+    for size in MAP_SIZES:
+        cities = get_random_cities(size, size, avg_count)
+        save_cities_into_file(cities, size)
+
+    return
+
+
+def save_cities_into_file(cities: list[tuple[int, int]], size: int) -> str:
+    n = len(cities)
+    name = f"rand{size}_{n}"
+    filename = f"data/{name}.tsp"
+    with open(filename, "w+") as f:
+        lines = [
+            f"NAME : {name}\n",
+            f"COMMENT : randomly generated map\n",
+            f"TYPE : TSP\n",
+            f"DIMENSION : {n}\n",
+            f"EDGE_WEIGHT_TYPE : EUC_2D\n",
+            f"NODE_COORD_SECTION\n"
+        ]
+        f.writelines(lines)
+        for i, city in enumerate(cities):
+            f.write(f"{i + 1}\t{city[0]}\t{city[1]}\n")
+        f.write("EOF\n")
+
+
+def benchmark_all(rand: bool) -> None:
     """
     Test the solver against all the files in the data folder and combination of
     temperature and cooling rates
+
+    @param rand: if we are testing random datasets
     """
 
     # Get all the problem files that have solutions
     all_files = os.listdir("data")
     data = set(map(remove_file_extension, all_files))
-    data_files = [f"data/{f}" for f in data if f"{f}.opt.tour" in all_files]
+
+    # Filter problems by tsplib or random
+    if rand:
+        data_files = [f"data/{f}" for f in data if f.startswith("rand")]
+        test_repeats, temperatures, cooling_rates = RAND_TEST_REPEATS, RAND_TEMPERATURES, RAND_COOLING_RATES
+    else:
+        data_files = [f"data/{f}" for f in data if f"{f}.opt.tour" in all_files]
+        test_repeats, temperatures, cooling_rates = TSPLIB_TEST_REPEATS, TSPLIB_TEST_REPEATS, TSPLIB_COOLING_RATES
 
     # Sort them by the number of nodes
     data_files.sort(key=lambda name: int("".join([s for s in name if s.isdigit()])))
@@ -47,13 +105,19 @@ def benchmark_all() -> None:
         problem = data_file.removeprefix("data/")
 
         # Test what happens when temperature is 0 (doesn't matter what cooling rate is
-        greedy_results = [benchmark(data_file, 0, 0) for _ in range(TSPLIB_TEST_REPEATS)]
+        if rand:
+            greedy_results = [run_test(data_file, 0, 0) for _ in range(test_repeats)]
+        else:
+            greedy_results = [benchmark(data_file, 0, 0) for _ in range(test_repeats)]
         print(write_results(problem, 0, 0, greedy_results))
 
         # Test for combination of temperature and cooling rates
-        for t in TSPLIB_TEMPERATURES:
-            for r in TSPLIB_COOLING_RATES:
-                results = [benchmark(data_file, t, r) for _ in range(TSPLIB_TEST_REPEATS)]
+        for t in temperatures:
+            for r in cooling_rates:
+                if rand:
+                    results = [run_test(data_file, t, r)]
+                else:
+                    results = [benchmark(data_file, t, r) for _ in range(test_repeats)]
                 print(write_results(problem, t, r, results))
     return
 
@@ -77,9 +141,40 @@ def write_results(problem: str, t: float, r: float, results: list[dict[str, floa
     return result_file
 
 
+def run_test(filename: str, t: int, r: int) -> dict[str, float]:
+    """
+    Run test on a problem without comparing to the solution
+
+    @param filename: the name of the tsp problem data
+    @param t: the temperature
+    @param r: the cooling rate
+    @return: a dictionary containing test results
+    """
+
+    # Find problem and cities
+    prob_file = f"{filename}.tsp"
+    loaded_cities = load_cities(prob_file)
+
+    # Get solver's solution
+    solver = SimulatedAnnealing(loaded_cities, temperature=t, cooling_rate=r)
+    solver.solve()
+    solver_order = solver.get_best_order()
+    solver_dist = solver.get_total_dist(solver_order)
+
+    # Return a dictionary containing test results
+    return {
+        "solver_dist": solver_dist,
+        "temperature": solver.initial_temperature,
+        "avg_city_dist": solver.avg_city_dist(),
+        "cooling_rate": solver.cooling_rate,
+        "city_count": solver.node_count,
+        "iterations": solver.iterations - solver.max_repeats,
+    }
+
+
 def benchmark(filename: str, t: int, r: int) -> dict[str, float]:
     """
-    Benchmark the simulated annealing solver against a dataset
+    Benchmark the simulated annealing solver against a problem
 
     @param filename: the name of the tsp problem data
     @param t: the temperature
