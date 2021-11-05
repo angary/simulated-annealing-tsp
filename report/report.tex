@@ -266,7 +266,6 @@ Hence, we shall try to parameterise the temperature by the weights of the paths,
 \newpage
 \section{Implementation}
 
-
 \subsection{Selection of Controlled Variables}
 
 \textbf{Objective Function}
@@ -391,6 +390,28 @@ However, because of its difficulty in implementation \cite{helsgaun98}, and the 
 
 \subsection{Code}
 
+For the implementation there are three main python files:
+
+\begin{itemize}
+    \item \texttt{src/solvers.py} 
+    
+    This contains classes that extend an abstract class \texttt{Solver} which contains abstract methods \texttt{get\_next\_order()} which runs one iteration of the solving algorithm, returning the current path it has found (used in the visualisation).
+    It also contains the \texttt{SimulatedAnnealing} class, which takes in optional parameters \texttt{temperature} and \texttt{cooling\_rate}.
+    
+    \item \texttt{src/main.py} 
+    
+    This contains the code for running a visualisation of a problem from a file or randomly generated cities.
+    It also has a method \texttt{solve()} which runs \texttt{get\_next\_order()} until the algorithm has determined that is has finished.
+    
+    \item \texttt{src/benchmark.py}
+    
+    This contains the code to benchmark the \texttt{SimulatedAnnealing} solver.
+    It can either load in problems from a file or generate random problems (as detailed later in the report) and tests the \texttt{SimulatedAnnealing} solver with different options for \texttt{temperature} and \texttt{cooling\_rate}.
+
+\end{itemize}
+
+The \texttt{data} folder contains different problems taken from the TSPLIB library, where \texttt{.tsp} files contain problem instances, and \texttt{.opt.tour} files contain the optimal tour for the problem.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Experimentation}
@@ -425,12 +446,12 @@ The algorithm was then determined to have "finished" after it did not find a bet
 The following variables were used:
 
 \begin{verbatim}
-    TEST_REPEATS = 20
-    TEMPERATURES = [10, 50, 100, 500, 1000, 5000]
-    COOLING_RATES = [0.999, 0.9995, 0.9999, 0.99995]
+TEST_REPEATS = 20
+TEMPERATURES = [10, 50, 100, 500, 1000, 5000]
+COOLING_RATES = [0.999, 0.9995, 0.9999, 0.99995]
 \end{verbatim}
 
-where TEST\_REPEATS is the number of time each test was repeated, TEMPERATURE is the initial temperature, and COOLING\_RATE is how much the temperature decreases each iteration.
+where \texttt{TEST\_REPEATS} is the number of time each test was repeated, \texttt{TEMPERATURE} is the initial temperature, and \texttt{COOLING\_RATE} is how much the temperature decreases each iteration.
 
 \subsubsection{Results}
 
@@ -451,9 +472,8 @@ where TEST\_REPEATS is the number of time each test was repeated, TEMPERATURE is
         0.99995 & 0.7549 & 0.2287 & 125381 \\
         \hline
     \end{tabular}
-    \caption{Comparison of cooling rates in first test round}
+    \caption{Results of different cooling rates of the TSPLIB problems}
 \end{figure}
-
 
 \begin{figure}[h]
     \centering
@@ -476,21 +496,54 @@ where TEST\_REPEATS is the number of time each test was repeated, TEMPERATURE is
         5000 & 0.7343 & 0.2245 & 111490 \\
         \hline
     \end{tabular}
-    \caption{Comparison of initial temperatures in first test round}
+    \caption{Results of different initial temperatures of the TSPLIB problems}
 \end{figure}
 
+\begin{figure}[h]
+    \centering
+    \begin{tabular}{ |c|c|c|c|c| } 
+        \hline
+        Name & City Count & Avg. City Distance & Avg. Iterations & Avg. Optimality \\ 
+        \hline
+        ulysses22.tsp & 22   & 4    & 84003  & 0.9991 \\
+        \hline
+        att48.tsp     & 48   & 1608 & 17216  & 0.9576 \\
+        \hline
+        berlin52.tsp  & 52   & 282  & 29205  & 0.9342 \\ 
+        \hline
+        rd100.tsp     & 100  & 275  & 32775  & 0.8780 \\
+        \hline
+        ch130.tsp     & 130  & 177  & 39815  & 0.8576 \\
+        \hline
+        ch150.tsp     & 150  & 178  & 40381  & 0.8087 \\
+        \hline
+        tsp225.tsp    & 225  & 91   & 56350  & 0.7502 \\
+        \hline
+        a280.tsp      & 280  & 61   & 68501  & 0.6757 \\
+        \hline
+        pcb442.tsp    & 442  & 872  & 78402  & 0.5924 \\
+        \hline
+        gr666.tsp     & 666  & 44   & 133338 & 0.6904 \\
+        \hline
+        pr1002.tsp    & 1002 & 3215 & 156407 & 0.4064 \\
+        \hline
+        pr2392.tsp    & 2392 & 3186 & 347207 & 0.2458 \\
+        \hline
+    \end{tabular}
+    \caption{Results of different TSPLIB problems}
+\end{figure}
 
 \begin{figure}[H]
 \centering
     \begin{subfigure}{0.45\textwidth}
         \centering
-        \includegraphics[width=1\linewidth]{images/optimality_city_count.jpg}
-        \caption{Comparison between greedy and SA for each city count}
+        \includegraphics[width=1\linewidth]{images/tsplib_optimality_city_count.jpg}
+        \caption{Cooling temp optimality for city count}
         \label{fig:sub1}
     \end{subfigure}%
     \begin{subfigure}{0.45\textwidth}
         \centering
-        \includegraphics[width=1\linewidth]{images/optimality_cooling_rate.jpg}
+        \includegraphics[width=1\linewidth]{images/tsplib_optimality_cooling_rate.jpg}
         \caption{Optimality for each cooling rate}
         \label{fig:sub2}
     \end{subfigure}
@@ -502,14 +555,14 @@ where TEST\_REPEATS is the number of time each test was repeated, TEMPERATURE is
 \centering
     \begin{subfigure}{0.45\textwidth}
         \centering
-        \includegraphics[width=1\linewidth]{images/optimality_city_dist.jpg}
-        \caption{Comparison between greedy and SA for each city distance}
+        \includegraphics[width=1\linewidth]{images/tsplib_optimality_city_dist.jpg}
+        \caption{Temp optimality for city distance}
         \label{fig:sub1}
     \end{subfigure}%
     \begin{subfigure}{0.45\textwidth}
-        \centering
-        \includegraphics[width=1\linewidth]{images/optimality_temperature.jpg}
-        \caption{Optimality for each temperature}
+        \centering  
+        \includegraphics[width=1\linewidth]{images/tsplib_optimality_temperature.jpg}
+        \caption{Optimality for each initial temperature}
         \label{fig:sub2}
     \end{subfigure}
     \caption{Visualisation between optimality, city distances and temperatures}
@@ -527,6 +580,7 @@ From these results there are a couple observations that we can make
 However, there are also issues that need to be addressed
 \begin{itemize}
     \item gr666.tsp is an outlier, is a dense cluster of cities, whilst the rest are sparsely scattered, resulting in a higher average optimality as despite perhaps having a bad path configuration - because so many cities were close, the change in distance was small)
+    \item since optimality has a very small correlation with optimality, we cannot tell if a certain temperature increases the optimality for an average city distance unless there is the same number of cities
 \end{itemize}
 
 To get more meaningful results, there needed to be a greater increase in the range of the cooling rate to determine the limit of a higher cooling rate.
@@ -534,15 +588,36 @@ The problem set used for the TSP problem also needs to be better controlled, as 
 
 \subsection{Random Dataset Test}
 In this new test, rather than using TSPLIB problems, our own data will be produced randomly, where we can vary or keep constant variables such as the city count and distance.
+\\
 
-The following variables were changed to be:
+To generate the problem instances, the following variables were used
 
 \begin{verbatim}
-    TEST_REPEATS = 30
-    TEMPERATURES = [10, 100, 1000, 10000]
-    COOLING_RATES = [0.999, 0.9999, 0.99999, 0.999999]
+MAP_SIZES = [50, 100, 500, 1000, 1500]
+CITY_COUNTS = [50, 100, 500, 1000, 1500]
+CONST_CITY_COUNT = 100
+CONST_MAP_SIZE = 100
 \end{verbatim}
 
+where \texttt{MAP\_SIZES} was the maximum value that an x or y coordinate of a city could take, and \texttt{CITY\_COUNT} was the number of cities in a map.
+
+To generate the random problem set, the \texttt{CONST\_CITY\_COUNT} would be used to generate a problem with the other map sizes.
+Then \texttt{CONST\_MAP\_SIZE} would be used to generate a problem with the other city counts.
+This would then result in 10 different maps.
+\\
+
+Then for testing, the a different temperature would be used to 
+\\
+
+While the following variables from the original test were changed to be:
+
+\begin{verbatim}
+RAND_TEST_REPEATS = 20
+RAND_TEMPERATURES = [10, 50, 100, 500, 1000]
+RAND_COOLING_RATES = [0.999, 0.9995, 0.999_9, 0.999_95, 0.999_99]
+RAND_CONST_TEMPERATURE = 10
+RAND_CONST_COOLING_RATE = 0.999
+\end{verbatim}
 
 \subsubsection{Results}
 
@@ -551,6 +626,8 @@ The following variables were changed to be:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Conclusion}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
