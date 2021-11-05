@@ -7,8 +7,10 @@ import random
 
 from src.config import \
     TSPLIB_TEST_REPEATS, TSPLIB_TEMPERATURES, TSPLIB_COOLING_RATES, \
-    MAP_SIZES, CITY_COUNTS, \
-    RAND_TEMPERATURES, RAND_TEST_REPEATS, RAND_COOLING_RATES
+    RAND_MAP_SIZES, RAND_CITY_COUNTS, \
+    RAND_CONST_MAP_SIZE, RAND_CONST_CITY_COUNT, \
+    RAND_TEMPERATURES, RAND_TEST_REPEATS, RAND_COOLING_RATES, \
+    RAND_CONST_TEMPERATURE, RAND_CONST_COOLING_RATE
 from src.setup import get_random_cities, load_cities
 from src.solvers import SimulatedAnnealing
 
@@ -42,16 +44,16 @@ def gen_rand_cities() -> None:
     """
     Generate a series of random city maps
     """
-    avg_count = CITY_COUNTS[len(CITY_COUNTS) // 2]
-    avg_size = MAP_SIZES[len(MAP_SIZES) // 2]
+    avg_count = RAND_CONST_CITY_COUNT
+    avg_size = RAND_CONST_MAP_SIZE
 
     # Generate random maps with different city count
-    for city_count in CITY_COUNTS:
+    for city_count in RAND_CITY_COUNTS:
         cities = get_random_cities(avg_size, avg_size, city_count)
         save_cities_into_file(cities, avg_size)
 
     # Generate random maps with different sizes
-    for size in MAP_SIZES:
+    for size in RAND_MAP_SIZES:
         cities = get_random_cities(size, size, avg_count)
         save_cities_into_file(cities, size)
 
@@ -95,16 +97,16 @@ def benchmark_all(rand: bool) -> None:
         test_repeats, temperatures, cooling_rates = RAND_TEST_REPEATS, RAND_TEMPERATURES, RAND_COOLING_RATES
     else:
         data_files = [f"data/{f}" for f in data if f"{f}.opt.tour" in all_files]
-        test_repeats, temperatures, cooling_rates = TSPLIB_TEST_REPEATS, TSPLIB_TEST_REPEATS, TSPLIB_COOLING_RATES
+        test_repeats, temperatures, cooling_rates = TSPLIB_TEST_REPEATS, TSPLIB_TEMPERATURES, TSPLIB_COOLING_RATES
 
     # Sort them by the number of nodes
     data_files.sort(key=lambda name: int("".join([s for s in name if s.isdigit()])))
 
     # Loop through each file and then test the file
-    for data_file in data_files:
-        problem = data_file.removeprefix("data/")
+    if not rand:
+        for data_file in data_files:
+            problem = data_file.removeprefix("data/")
 
-        if not rand:
             # Test what happens when temperature is 0 (doesn't matter what cooling rate is
             greedy_results = [benchmark(data_file, 0, 0) for _ in range(test_repeats)]
             print(write_results(problem, 0, 0, greedy_results))
@@ -114,37 +116,37 @@ def benchmark_all(rand: bool) -> None:
                 for r in cooling_rates:
                     results = [benchmark(data_file, t, r) for _ in range(test_repeats)]
                     print(write_results(problem, t, r, results))
-        else:
-            avg_cr = TSPLIB_COOLING_RATES[len(TSPLIB_COOLING_RATES) // 2]
-            avg_t = TSPLIB_TEMPERATURES[len(TSPLIB_TEMPERATURES) // 2]
-            avg_size = MAP_SIZES[len(MAP_SIZES) // 2]
-            avg_count = CITY_COUNTS[len(CITY_COUNTS) // 2]
+    else:
+        avg_cr = RAND_CONST_COOLING_RATE
+        avg_t = RAND_CONST_TEMPERATURE
+        avg_size = RAND_CONST_MAP_SIZE
+        avg_count = RAND_CONST_CITY_COUNT
 
-            # Test the different temperatures
-            avg_size_files = []
-            for data_file in data_files:
-                size = int(data_file.split("_")[0].removeprefix("data/rand"))
-                if size == avg_size:
-                    avg_size_files.append(data_file)
+        # Test the different temperatures
+        avg_size_files = []
+        for data_file in data_files:
+            size = int(data_file.split("_")[0].removeprefix("data/rand"))
+            if size == avg_size:
+                avg_size_files.append(data_file)
 
-            for t in temperatures:
-                for data_file in avg_size_files:
-                    problem = data_file.removeprefix("data/")
-                    results = [run_test(data_file, t, avg_cr) for _ in range(test_repeats)]
-                    print(write_results(problem, t, avg_cr, results))
+        for t in temperatures:
+            for data_file in avg_size_files:
+                problem = data_file.removeprefix("data/")
+                print(f"testing {problem} with {t = } {avg_cr = }")
+                results = [run_test(data_file, t, avg_cr) for _ in range(test_repeats)]
+                print(write_results(problem, t, avg_cr, results))
 
-            # Test the different cooling rates
-            avg_count_files = []
-            for data_file in data_files:
-                count = int(data_file.split("_")[1])
-                if count == avg_count:
-                    avg_count_files.append(data_file)
-
-            for cr in cooling_rates:
-                for data_file in avg_count_files:
-                    problem = data_file.removeprefix("data/")
-                    results = [run_test(data_file, avg_t, cr) for _ in range(test_repeats)]
-                    print(write_results(problem, avg_t, cr, results))
+        # Test the different cooling rates
+        avg_count_files = []
+        for data_file in data_files:
+            count = int(data_file.split("_")[1])
+            if count == avg_count:
+                avg_count_files.append(data_file)
+        for cr in cooling_rates:
+            for data_file in avg_count_files:
+                problem = data_file.removeprefix("data/")
+                results = [run_test(data_file, avg_t, cr) for _ in range(test_repeats)]
+                print(write_results(problem, avg_t, cr, results))
     return
 
 
@@ -176,7 +178,6 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
     @param r: the cooling rate
     @return: a dictionary containing test results
     """
-
     # Find problem and cities
     prob_file = f"{filename}.tsp"
     loaded_cities = load_cities(prob_file)
