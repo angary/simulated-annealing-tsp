@@ -104,21 +104,47 @@ def benchmark_all(rand: bool) -> None:
     for data_file in data_files:
         problem = data_file.removeprefix("data/")
 
-        # Test what happens when temperature is 0 (doesn't matter what cooling rate is
-        if rand:
-            greedy_results = [run_test(data_file, 0, 0) for _ in range(test_repeats)]
-        else:
+        if not rand:
+            # Test what happens when temperature is 0 (doesn't matter what cooling rate is
             greedy_results = [benchmark(data_file, 0, 0) for _ in range(test_repeats)]
-        print(write_results(problem, 0, 0, greedy_results))
+            print(write_results(problem, 0, 0, greedy_results))
 
-        # Test for combination of temperature and cooling rates
-        for t in temperatures:
-            for r in cooling_rates:
-                if rand:
-                    results = [run_test(data_file, t, r)]
-                else:
+            # Test for combination of temperature and cooling rates
+            for t in temperatures:
+                for r in cooling_rates:
                     results = [benchmark(data_file, t, r) for _ in range(test_repeats)]
-                print(write_results(problem, t, r, results))
+                    print(write_results(problem, t, r, results))
+        else:
+            avg_cr = TSPLIB_COOLING_RATES[len(TSPLIB_COOLING_RATES) // 2]
+            avg_t = TSPLIB_TEMPERATURES[len(TSPLIB_TEMPERATURES) // 2]
+            avg_size = MAP_SIZES[len(MAP_SIZES) // 2]
+            avg_count = CITY_COUNTS[len(CITY_COUNTS) // 2]
+
+            # Test the different temperatures
+            avg_size_files = []
+            for data_file in data_files:
+                size = int(data_file.split("_")[0].removeprefix("data/rand"))
+                if size == avg_size:
+                    avg_size_files.append(data_file)
+
+            for t in temperatures:
+                for data_file in avg_size_files:
+                    problem = data_file.removeprefix("data/")
+                    results = [run_test(data_file, t, avg_cr) for _ in range(test_repeats)]
+                    print(write_results(problem, t, avg_cr, results))
+
+            # Test the different cooling rates
+            avg_count_files = []
+            for data_file in data_files:
+                count = int(data_file.split("_")[1])
+                if count == avg_count:
+                    avg_count_files.append(data_file)
+
+            for cr in cooling_rates:
+                for data_file in avg_count_files:
+                    problem = data_file.removeprefix("data/")
+                    results = [run_test(data_file, avg_t, cr) for _ in range(test_repeats)]
+                    print(write_results(problem, avg_t, cr, results))
     return
 
 
