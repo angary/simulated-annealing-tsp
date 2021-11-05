@@ -4,10 +4,10 @@ import argparse
 import csv
 import os
 
+from src.config import *
 from src.setup import load_cities
 from src.solvers import SimulatedAnnealing
 
-from src.config import TEST_REPEATS, TEMPERATURES, COOLING_RATES
 
 def main() -> None:
     args = parse_args()
@@ -47,13 +47,13 @@ def benchmark_all() -> None:
         problem = data_file.removeprefix("data/")
 
         # Test what happens when temperature is 0 (doesn't matter what cooling rate is
-        greedy_results = [benchmark(data_file, 0, 0) for _ in range(TEST_REPEATS)]
+        greedy_results = [benchmark(data_file, 0, 0) for _ in range(TSPLIB_TEST_REPEATS)]
         print(write_results(problem, 0, 0, greedy_results))
 
         # Test for combination of temperature and cooling rates
-        for t in TEMPERATURES:
-            for r in COOLING_RATES:
-                results = [benchmark(data_file, t, r) for _ in range(TEST_REPEATS)]
+        for t in TSPLIB_TEMPERATURES:
+            for r in TSPLIB_COOLING_RATES:
+                results = [benchmark(data_file, t, r) for _ in range(TSPLIB_TEST_REPEATS)]
                 print(write_results(problem, t, r, results))
     return
 
@@ -171,6 +171,19 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=None,
         help="the cooling rate of the system"
+    )
+    parser.add_argument(
+        "-g",
+        "--gen-rand-data",
+        action="store_true",
+        help="test the algorithm on randomly generated city datasets"
+    )
+    parser.add_argument(
+        "-s",
+        "--seed",
+        type=int,
+        default=1,
+        help="the seed for generating random maps"
     )
     return parser.parse_args()
 
