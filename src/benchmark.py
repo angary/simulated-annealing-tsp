@@ -7,12 +7,12 @@ import random
 
 from src.config import \
     TSPLIB_TEST_REPEATS, TSPLIB_TEMPERATURES, TSPLIB_COOLING_RATES, \
-    RAND_MAP_SIZES, RAND_CITY_COUNTS, \
-    RAND_CONST_MAP_SIZE, RAND_CONST_CITY_COUNT, \
+    RAND_CITY_DISTS, RAND_CITY_COUNTS, \
+    RAND_CONST_CITY_DIST, RAND_CONST_CITY_COUNT, \
     RAND_TEMPERATURES, RAND_TEST_REPEATS, RAND_COOLING_RATES, \
     RAND_CONST_TEMPERATURE, RAND_CONST_COOLING_RATE
 from src.setup import get_random_cities, load_cities
-from src.solvers import SimulatedAnnealing
+from src.solvers import Solver, SimulatedAnnealing
 
 
 def main() -> None:
@@ -25,8 +25,8 @@ def main() -> None:
     if gen_rand_data:
         # Generate random maps
         random.seed(args.seed)
-        gen_rand_cities()
-        benchmark_all(True)
+        files = gen_rand_cities()
+        benchmark_rand(files)
     elif filename:
         # If we are given a file, print out the results
         filename = remove_file_extension(filename)
@@ -36,117 +36,139 @@ def main() -> None:
             print(key, val)
     else:
         # Else run tests on all the problems, and write results to results folder
-        benchmark_all(False)
+        benchmark_tsplib()
     return
 
 
-def gen_rand_cities() -> None:
+def gen_rand_cities() -> dict[str, list[str]]:
     """
     Generate a series of random city maps
+
+    @return: dictionary containing file paths to the cities
     """
-    avg_count = RAND_CONST_CITY_COUNT
-    avg_size = RAND_CONST_MAP_SIZE
 
     # Generate random maps with different city count
+    # where they have the same size
+    temperature_tests = []
     for city_count in RAND_CITY_COUNTS:
-        cities = get_random_cities(avg_size, avg_size, city_count)
-        save_cities_into_file(cities, avg_size)
 
-    # Generate random maps with different sizes
-    for size in RAND_MAP_SIZES:
-        cities = get_random_cities(size, size, avg_count)
-        save_cities_into_file(cities, size)
+        # Generate random points and find their average distance
+        cities = get_random_cities(1000, 1000, city_count)
+        city_dist = Solver.avg_city_dist(cities)
 
-    return
+        # For every city scale their coordinate so they have correct avg dist
+        scale = RAND_CONST_CITY_DIST / city_dist
+        cities = [(i * scale, j * scale) for (i, j) in cities]
+
+        filepath = save_cities_into_file(cities, RAND_CONST_CITY_DIST)
+        temperature_tests.append(filepath)
+        print(filepath)
+
+    # Generate random maps with different average distances between the cities
+    # where they have the same average city distance
+    cooling_rate_tests = []
+    for rand_city_dist in RAND_CITY_DISTS:
+
+        # Generate random points and find their average distance
+        cities = get_random_cities(1000, 1000, RAND_CONST_CITY_COUNT)
+        city_dist = Solver.avg_city_dist(cities)
+
+        # Scale the city to the new
+        scale = rand_city_dist / city_dist
+        cities = [(i * scale, j * scale) for (i, j) in cities]
+
+        filepath = save_cities_into_file(cities, rand_city_dist)
+        cooling_rate_tests.append(filepath)
+        print(filepath)
+
+    return {
+        "temperature_tests": temperature_tests,
+        "cooling_rate_tests": cooling_rate_tests
+    }
 
 
 def save_cities_into_file(cities: list[tuple[int, int]], size: int) -> str:
+    """
+    Given a list of cities, save the data into a file in TSPLIB format
+
+    @param cities: A list of the coordinates of the cities
+    @param size: the average distance between all the cities
+    @return: the path to the file
+    """
     n = len(cities)
     name = f"rand{size}_{n}"
     filename = f"data/{name}.tsp"
     with open(filename, "w+") as f:
-        lines = [
+        f.writelines([
             f"NAME : {name}\n",
             f"COMMENT : randomly generated map\n",
             f"TYPE : TSP\n",
             f"DIMENSION : {n}\n",
             f"EDGE_WEIGHT_TYPE : EUC_2D\n",
             f"NODE_COORD_SECTION\n"
-        ]
-        f.writelines(lines)
+        ])
         for i, city in enumerate(cities):
             f.write(f"{i + 1}\t{city[0]}\t{city[1]}\n")
         f.write("EOF\n")
+    return filename
 
 
-def benchmark_all(rand: bool) -> None:
+def benchmark_rand(files: dict[str, list[str]]) -> None:
     """
-    Test the solver against all the files in the data folder and combination of
-    temperature and cooling rates
+    Test the solver against the randomly generated city sets
 
-    @param rand: if we are testing random datasets
+    @param files: dictionary containing list of file paths for the different problems
+    """
+
+    for temperature in RAND_TEMPERATURES:
+        for data_file in files["temperature_tests"]:
+            problem = data_file.removeprefix("data/")
+            results = []
+            for _ in range(RAND_TEST_REPEATS):
+                result = run_test(data_file, temperature, RAND_CONST_COOLING_RATE)
+                results.append(result)
+            print(write_results(problem, temperature, RAND_CONST_COOLING_RATE, results))
+
+    for cooling_rate in RAND_COOLING_RATES:
+        for data_file in files["cooling_rate_tests"]:
+            problem = data_file.removeprefix("data/")
+            results = []
+            for _ in range(RAND_TEST_REPEATS):
+                result = run_test(data_file, RAND_CONST_TEMPERATURE, cooling_rate)
+                results.append(result)
+            print(write_results(problem, RAND_CONST_TEMPERATURE, cooling_rate, results))
+    return None
+
+
+def benchmark_tsplib() -> None:
+    """
+    Test the solver against all the tsplib problems in the data folder
+    temperature and cooling rates
     """
 
     # Get all the problem files that have solutions
     all_files = os.listdir("data")
     data = set(map(remove_file_extension, all_files))
 
-    # Filter problems by tsplib or random
-    if rand:
-        data_files = [f"data/{f}" for f in data if f.startswith("rand")]
-        test_repeats, temperatures, cooling_rates = RAND_TEST_REPEATS, RAND_TEMPERATURES, RAND_COOLING_RATES
-    else:
-        data_files = [f"data/{f}" for f in data if f"{f}.opt.tour" in all_files]
-        test_repeats, temperatures, cooling_rates = TSPLIB_TEST_REPEATS, TSPLIB_TEMPERATURES, TSPLIB_COOLING_RATES
+    # Only select problems that have an optimal tour
+    data_files = [f"data/{f}" for f in data if f"{f}.opt.tour" in all_files]
 
     # Sort them by the number of nodes
     data_files.sort(key=lambda name: int("".join([s for s in name if s.isdigit()])))
 
     # Loop through each file and then test the file
-    if not rand:
-        for data_file in data_files:
-            problem = data_file.removeprefix("data/")
+    for data_file in data_files:
+        problem = data_file.removeprefix("data/")
 
-            # Test what happens when temperature is 0 (doesn't matter what cooling rate is
-            greedy_results = [benchmark(data_file, 0, 0) for _ in range(test_repeats)]
-            print(write_results(problem, 0, 0, greedy_results))
+        # Test what happens when temperature is 0 (doesn't matter what cooling rate is
+        greedy_results = [benchmark(data_file, 0, 0) for _ in range(TSPLIB_TEST_REPEATS)]
+        print(write_results(problem, 0, 0, greedy_results))
 
-            # Test for combination of temperature and cooling rates
-            for t in temperatures:
-                for r in cooling_rates:
-                    results = [benchmark(data_file, t, r) for _ in range(test_repeats)]
-                    print(write_results(problem, t, r, results))
-    else:
-        avg_cr = RAND_CONST_COOLING_RATE
-        avg_t = RAND_CONST_TEMPERATURE
-        avg_size = RAND_CONST_MAP_SIZE
-        avg_count = RAND_CONST_CITY_COUNT
-
-        # Test the different temperatures
-        avg_size_files = []
-        for data_file in data_files:
-            size = int(data_file.split("_")[0].removeprefix("data/rand"))
-            if size == avg_size:
-                avg_size_files.append(data_file)
-
-        for t in temperatures:
-            for data_file in avg_size_files:
-                problem = data_file.removeprefix("data/")
-                print(f"testing {problem} with {t = } {avg_cr = }")
-                results = [run_test(data_file, t, avg_cr) for _ in range(test_repeats)]
-                print(write_results(problem, t, avg_cr, results))
-
-        # Test the different cooling rates
-        avg_count_files = []
-        for data_file in data_files:
-            count = int(data_file.split("_")[1])
-            if count == avg_count:
-                avg_count_files.append(data_file)
-        for cr in cooling_rates:
-            for data_file in avg_count_files:
-                problem = data_file.removeprefix("data/")
-                results = [run_test(data_file, avg_t, cr) for _ in range(test_repeats)]
-                print(write_results(problem, avg_t, cr, results))
+        # Test for combination of temperature and cooling rates
+        for t in TSPLIB_TEMPERATURES:
+            for r in TSPLIB_COOLING_RATES:
+                results = [benchmark(data_file, t, r) for _ in range(TSPLIB_TEST_REPEATS)]
+                print(write_results(problem, t, r, results))
     return
 
 
@@ -192,7 +214,7 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
     return {
         "solver_dist": solver_dist,
         "temperature": solver.initial_temperature,
-        "avg_city_dist": solver.avg_city_dist(),
+        "avg_city_dist": solver.avg_city_dist(loaded_cities),
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.node_count,
         "iterations": solver.iterations - solver.max_repeats,
@@ -231,7 +253,7 @@ def benchmark(filename: str, t: int, r: int) -> dict[str, float]:
         "solver_dist": solver_dist,
         "optimality": soln_dist / solver_dist,
         "temperature": solver.initial_temperature,
-        "avg_city_dist": solver.avg_city_dist(),
+        "avg_city_dist": solver.avg_city_dist(loaded_cities),
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.node_count,
         "iterations": solver.iterations - solver.max_repeats,

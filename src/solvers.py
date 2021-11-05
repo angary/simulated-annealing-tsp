@@ -37,6 +37,18 @@ class Solver(ABC):
             return SimulatedAnnealing(nodes)
         raise Exception("Invalid solver name")
 
+    @staticmethod
+    def avg_city_dist(cities: list[tuple[int, int]]) -> float:
+        """
+        Find the sum of the paths between all the cities and then
+        divide it by the number of cities
+
+        @return: the average distance between all the cities
+        """
+        n = len(cities)
+        adj = [[dist(i, j) if i != j else 0 for i in cities] for j in cities]
+        return sum([sum(row) for row in adj]) / (n ** 2 * 2)
+
     def get_total_dist(self, order: list[int]) -> float:
         """
         Get the total distance between the nodes based off the ordering
@@ -48,14 +60,6 @@ class Solver(ABC):
             total += self.adj[order[i + 1]][order[i]]
         total += self.adj[order[-1]][order[0]]
         return total
-
-    def avg_city_dist(self) -> float:
-        """
-        Find the sum of the paths between all the cities and then
-        divide it by the number of cities
-        @return:
-        """
-        return sum([sum(row) for row in self.adj]) / (self.node_count ** 2 * 2)
 
     @abstractmethod
     def solve(self) -> None:
