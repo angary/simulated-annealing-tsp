@@ -46,11 +46,11 @@ class Solver(ABC):
         @return: the average distance between all the cities
         """
         n = len(cities)
-        total = 0
+        total_dist = 0
         for i in range(n - 1):
             for j in range(i + 1, n):
-                total += dist(cities[i], cities[j])
-        return 2 * total // (n ** 2)
+                total_dist += dist(cities[i], cities[j])
+        return total_dist / (n * (n - 1) / 2)
 
     def get_total_dist(self, order: list[int]) -> float:
         """
@@ -94,11 +94,11 @@ class Solver(ABC):
 
 class SimulatedAnnealing(Solver):
 
-    def __init__(self, nodes, temperature: float = -1, cooling_rate: float = -1):
+    def __init__(self, nodes, temperature: float = 100, cooling_rate: float = 0.9995):
         super().__init__(nodes)
         shuffle(self.order)
-        self.temperature = temperature if temperature != -1 else 100
-        self.cooling_rate = cooling_rate if cooling_rate != -1 else 0.999995
+        self.temperature = temperature
+        self.cooling_rate = cooling_rate
         self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
@@ -111,13 +111,14 @@ class SimulatedAnnealing(Solver):
         """
         repeat = 0
         order = []
+        lowest_dist = float("inf")
         while repeat < self.max_repeats:
-            new_order = self.get_next_order()
-            if order == new_order:
-                repeat += 1
-            else:
+            self.get_next_order()
+            if self.curr_dist < lowest_dist:
                 repeat = 0
-                order = new_order
+                lowest_dist = self.curr_dist
+            else:
+                repeat += 1
         return
 
     def get_next_order(self) -> list[int]:
