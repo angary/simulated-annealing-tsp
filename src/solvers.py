@@ -46,8 +46,11 @@ class Solver(ABC):
         @return: the average distance between all the cities
         """
         n = len(cities)
-        adj = [[dist(i, j) if i != j else 0 for i in cities] for j in cities]
-        return sum([sum(row) for row in adj]) / (n ** 2 * 2)
+        total = 0
+        for i in range(n - 1):
+            for j in range(i + 1, n):
+                total += dist(cities[i], cities[j])
+        return 2 * total // (n ** 2)
 
     def get_total_dist(self, order: list[int]) -> float:
         """

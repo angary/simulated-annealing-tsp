@@ -49,7 +49,7 @@ def gen_rand_cities() -> dict[str, list[str]]:
 
     # Generate random maps with different city count
     # where they have the same size
-    temperature_tests = []
+    cooling_rate_tests = []
     for city_count in RAND_CITY_COUNTS:
 
         # Generate random points and find their average distance
@@ -60,13 +60,17 @@ def gen_rand_cities() -> dict[str, list[str]]:
         scale = RAND_CONST_CITY_DIST / city_dist
         cities = [(i * scale, j * scale) for (i, j) in cities]
 
-        filepath = save_cities_into_file(cities, RAND_CONST_CITY_DIST)
-        temperature_tests.append(filepath)
+        filepath = save_cities_into_file(
+            cities,
+            RAND_CONST_CITY_DIST,
+            "randomly generated cooling rate test"
+        )
+        cooling_rate_tests.append(filepath)
         print(filepath)
 
     # Generate random maps with different average distances between the cities
     # where they have the same average city distance
-    cooling_rate_tests = []
+    temperature_tests = []
     for rand_city_dist in RAND_CITY_DISTS:
 
         # Generate random points and find their average distance
@@ -77,8 +81,12 @@ def gen_rand_cities() -> dict[str, list[str]]:
         scale = rand_city_dist / city_dist
         cities = [(i * scale, j * scale) for (i, j) in cities]
 
-        filepath = save_cities_into_file(cities, rand_city_dist)
-        cooling_rate_tests.append(filepath)
+        filepath = save_cities_into_file(
+            cities,
+            rand_city_dist,
+            "randomly generated temperature test"
+        )
+        temperature_tests.append(filepath)
         print(filepath)
 
     return {
@@ -87,12 +95,13 @@ def gen_rand_cities() -> dict[str, list[str]]:
     }
 
 
-def save_cities_into_file(cities: list[tuple[int, int]], size: int) -> str:
+def save_cities_into_file(cities: list[tuple[int, int]], size: int, comment: str = "") -> str:
     """
     Given a list of cities, save the data into a file in TSPLIB format
 
     @param cities: A list of the coordinates of the cities
     @param size: the average distance between all the cities
+    @param comment: the comment to add in the file
     @return: the path to the file
     """
     n = len(cities)
@@ -101,7 +110,7 @@ def save_cities_into_file(cities: list[tuple[int, int]], size: int) -> str:
     with open(filename, "w+") as f:
         f.writelines([
             f"NAME : {name}\n",
-            f"COMMENT : randomly generated map\n",
+            f"COMMENT : {comment}\n",
             f"TYPE : TSP\n",
             f"DIMENSION : {n}\n",
             f"EDGE_WEIGHT_TYPE : EUC_2D\n",
@@ -201,8 +210,8 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
     @return: a dictionary containing test results
     """
     # Find problem and cities
-    prob_file = f"{filename}.tsp"
-    loaded_cities = load_cities(prob_file)
+    loaded_cities = load_cities(filename)
+    avg_city_dist = int("".join([c for c in filename.split("_")[0] if c.isdigit()]))
 
     # Get solver's solution
     solver = SimulatedAnnealing(loaded_cities, temperature=t, cooling_rate=r)
@@ -214,7 +223,7 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
     return {
         "solver_dist": solver_dist,
         "temperature": solver.initial_temperature,
-        "avg_city_dist": solver.avg_city_dist(loaded_cities),
+        "avg_city_dist": avg_city_dist,
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.node_count,
         "iterations": solver.iterations - solver.max_repeats,
