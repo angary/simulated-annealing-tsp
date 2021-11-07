@@ -70,19 +70,18 @@ def gen_rand_cities() -> dict[str, list[str]]:
 
     # Generate random maps with different average distances between the cities
     # where they have the same average city distance
+    cities = get_random_cities(1000, 1000, RAND_CONST_CITY_COUNT)
+    city_dist = Solver.avg_city_dist(cities)
     temperature_tests = []
     for rand_city_dist in RAND_CITY_DISTS:
+    
 
-        # Generate random points and find their average distance
-        cities = get_random_cities(1000, 1000, RAND_CONST_CITY_COUNT)
-        city_dist = Solver.avg_city_dist(cities)
-
-        # Scale the city to the new
+        # Scale the city positions to the desired avg city distance
         scale = rand_city_dist / city_dist
-        cities = [(i * scale, j * scale) for (i, j) in cities]
+        scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
 
         filepath = save_cities_into_file(
-            cities,
+            scaled_cities,
             rand_city_dist,
             "randomly generated temperature test"
         )
@@ -138,14 +137,14 @@ def benchmark_rand(files: dict[str, list[str]]) -> None:
                 results.append(result)
             print(write_results(problem, temperature, RAND_CONST_COOLING_RATE, results))
 
-    for cooling_rate in RAND_COOLING_RATES:
-        for data_file in files["cooling_rate_tests"]:
-            problem = data_file.removeprefix("data/")
-            results = []
-            for _ in range(RAND_TEST_REPEATS):
-                result = run_test(data_file, RAND_CONST_TEMPERATURE, cooling_rate)
-                results.append(result)
-            print(write_results(problem, RAND_CONST_TEMPERATURE, cooling_rate, results))
+    # for cooling_rate in RAND_COOLING_RATES:
+    #     for data_file in files["cooling_rate_tests"]:
+    #         problem = data_file.removeprefix("data/")
+    #         results = []
+    #         for _ in range(RAND_TEST_REPEATS):
+    #             result = run_test(data_file, RAND_CONST_TEMPERATURE, cooling_rate)
+    #             results.append(result)
+    #         print(write_results(problem, RAND_CONST_TEMPERATURE, cooling_rate, results))
     return None
 
 

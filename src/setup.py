@@ -31,7 +31,7 @@ def load_cities(filepath: str) -> list[tuple[float, float]]:
         end = lines.index("EOF\n")
         lines = lines[start:end]
         for line in lines:
-            coords = list(map(float, line.split()[1:]))
+            coords = list(map(float, line.split()[1:3]))
             coords.reverse()
             cities.append(coords)
     return cities
@@ -65,12 +65,12 @@ def normalise_coords(cities: list[tuple[float, float]], height: int, width: int,
     scale_y = (height - border * 2) / (max_y + min_y)
 
     # Choose the smaller scale to prevent overflow
-    # scale = min(scale_x, scale_y)
+    scale = min(scale_x, scale_y)
 
     normalised = []
     for c in cities:
         # Ensure that all the cities are properly scaled
-        normalised_x = int(scale_x * (c[0] + min_x)) + border
-        normalised_y = height - int(scale_y * (c[1] + min_y)) - border
+        normalised_x = int(scale * (c[0] + min_x)) + border
+        normalised_y = height - int(scale * (c[1] + min_y)) - border
         normalised.append((normalised_x, normalised_y))
     return normalised

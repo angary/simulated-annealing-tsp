@@ -94,7 +94,7 @@ class Solver(ABC):
 
 class SimulatedAnnealing(Solver):
 
-    def __init__(self, nodes, temperature: float = 100, cooling_rate: float = 0.9995):
+    def __init__(self, nodes, temperature: float = 100, cooling_rate: float = 0.999999):
         super().__init__(nodes)
         shuffle(self.order)
         self.temperature = temperature
@@ -102,7 +102,7 @@ class SimulatedAnnealing(Solver):
         self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
-        self.max_repeats = 1000
+        self.max_repeats = 5000
 
     def solve(self) -> None:
         """
@@ -110,7 +110,6 @@ class SimulatedAnnealing(Solver):
         not changed after self.max_repeats iterations
         """
         repeat = 0
-        order = []
         lowest_dist = float("inf")
         while repeat < self.max_repeats:
             self.get_next_order()
@@ -183,7 +182,6 @@ class SimulatedAnnealing(Solver):
         @param b: the higher index
         """
         self.order = self.order[:a + 1] + self.order[b:a:-1] + self.order[b + 1:]
-
 
 ################################################################################
 
