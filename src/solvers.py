@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import math
 
+
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from heapq import heappop, heappush
-from math import factorial
+from math import dist, factorial
 from random import randrange, shuffle, uniform
-from p5.pmath.utils import dist
 
 
 INFTY = float("inf")
@@ -15,26 +15,30 @@ INFTY = float("inf")
 
 class Solver(ABC):
 
-    def __init__(self, nodes: list[tuple[int, int]]):
-        self.nodes = nodes
-        self.node_count = len(nodes)
+    def __init__(self, cities: list[tuple[int, int]]):
+        self.cities = cities
+        self.node_count = len(cities)
         self.order = [i for i in range(self.node_count)]
         self.adj = [
-            [dist(i, j) if i != j else 0 for i in nodes] for j in nodes
+            [dist(i, j) if i != j else 0 for i in cities] for j in cities
         ]
 
     @staticmethod
-    def get_solver(solver_name: str, nodes: list[tuple[int, int]]) -> "Solver":
+    def get_solver(solver_name: str, cities: list[tuple[int, int]]) -> "Solver":
         """
         Return a new solver based off the name
+
+        @param solver_name: the name of the solver
+        @param cities: a list of the coordinates of the cities
+        @return: the solver with the respective name
         """
         solver_name = solver_name.lower().replace(" ", "")
         if solver_name == "bruteforce":
-            return BruteForce(nodes)
+            return BruteForce(cities)
         if solver_name == "branchandbound":
-            return BranchAndBound(nodes)
+            return BranchAndBound(cities)
         if solver_name == "simulatedannealing":
-            return SimulatedAnnealing(nodes)
+            return SimulatedAnnealing(cities)
         raise Exception("Invalid solver name")
 
     @staticmethod
@@ -43,6 +47,7 @@ class Solver(ABC):
         Find the sum of the paths between all the cities and then
         divide it by the number of cities
 
+        @param cities: a list of the coordinates of the cities
         @return: the average distance between all the cities
         """
         n = len(cities)
@@ -54,7 +59,10 @@ class Solver(ABC):
 
     def get_total_dist(self, order: list[int]) -> float:
         """
-        Get the total distance between the nodes based off the ordering
+        Get the total distance between the cities based off the ordering
+
+        @param order: a list containing the order of cities to visit
+        @return: the total distance of travelling in the order and returning to the start
         """
         if not order:
             return 0
@@ -94,8 +102,8 @@ class Solver(ABC):
 
 class SimulatedAnnealing(Solver):
 
-    def __init__(self, nodes, temperature: float = 100, cooling_rate: float = 0.999999):
-        super().__init__(nodes)
+    def __init__(self, cities, temperature: float = 100, cooling_rate: float = 0.999):
+        super().__init__(cities)
         shuffle(self.order)
         self.temperature = temperature
         self.cooling_rate = cooling_rate
@@ -124,11 +132,11 @@ class SimulatedAnnealing(Solver):
         # Lower the temperature
         self.iterations += 1
 
-        # TODO: Tweak the temperature cooling based off number of nodes
+        # TODO: Tweak the temperature cooling based off number of cities
         self.temperature = self.temperature * self.cooling_rate
 
         # Find new order
-        a, b = self.get_two_nodes()
+        a, b = self.get_two_cities()
         loss = self.get_swap_cost(a, b)
         prob = 0 if (loss <= 0 or self.temperature <= 0) else math.exp(-loss / self.temperature)
 
@@ -142,7 +150,7 @@ class SimulatedAnnealing(Solver):
     def get_best_order(self) -> list[int]:
         return self.order
 
-    def get_two_nodes(self) -> tuple[int, int]:
+    def get_two_cities(self) -> tuple[int, int]:
         """
         @return: two indexes between 0 and n, where the first is smaller
         """
@@ -188,8 +196,8 @@ class SimulatedAnnealing(Solver):
 
 class BruteForce(Solver):
 
-    def __init__(self, nodes):
-        super().__init__(nodes)
+    def __init__(self, cities):
+        super().__init__(cities)
         self.best_order = [i for i in range(self.node_count)]
 
     def solve(self) -> None:
@@ -199,7 +207,9 @@ class BruteForce(Solver):
 
     def get_next_order(self) -> list[int]:
         """
-        Returns the next path in lexicographical ordering
+        Find the next path in lexicographical ordering
+
+        @return: the next path found
         """
         order = self.order.copy()
         x = -1
@@ -235,10 +245,10 @@ class BruteForce(Solver):
 
 class BranchAndBound(Solver):
 
-    def __init__(self, nodes):
-        super().__init__(nodes)
+    def __init__(self, cities):
+        super().__init__(cities)
         self.adj = [
-            [dist(i, j) if i != j else INFTY for i in nodes] for j in nodes
+            [dist(i, j) if i != j else INFTY for i in cities] for j in cities
         ]
         self.cost = reduce_adj(self.adj, self.node_count)
         adj_arr = self.adj.copy()
@@ -254,7 +264,9 @@ class BranchAndBound(Solver):
 
     def get_next_order(self) -> list[int]:
         """
-        Returns the next optimal path that we have found so far
+        Find the next order using the branch and bound method
+
+        @return: the next optimal path that we have found so far
         """
         if self.found_best:
             return []
@@ -265,11 +277,11 @@ class BranchAndBound(Solver):
         curr_adj = curr_path.adj
         curr_cost = curr_path.cost
 
-        # List of the next possible nodes that we can go to
-        next_nodes = [i for i in range(self.node_count) if i not in curr_path.order]
+        # List of the next possible cities that we can go to
+        next_cities = [i for i in range(self.node_count) if i not in curr_path.order]
 
         # Generate their paths
-        for next_node in next_nodes:
+        for next_node in next_cities:
             # Find the new adj matrix after travelling to the next node
             new_adj = set_infty(curr_adj, curr_node, next_node)
 
@@ -308,6 +320,11 @@ def set_infty(arr: list[list[float]], row_idx: int, col_idx: int) -> list[list[f
     """
     Given a 2D square array and the index of a row and column, return a new list
     where the values of the row and col is now set to infinity
+
+    @param arr: 2d list of floats
+    @param row_idx: the row to set to infinity
+    @param col_idx: the col to set to infinity
+    @return: the new list with values set to infinity
     """
     new_arr = deepcopy(arr)
     n = len(arr)
@@ -322,6 +339,9 @@ def reduce_adj(arr: list[list[float]], n: int) -> int:
     """
     Subtract the minimum value of each row from the row, and subtract the
     minimum value of each col from the col. Then return the total subtracted
+
+    @param arr: 2d list of floats
+    @return: the total value reduced
     """
     total = 0
 

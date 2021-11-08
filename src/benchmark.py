@@ -66,7 +66,7 @@ def gen_rand_cities() -> dict[str, list[str]]:
             "randomly generated cooling rate test"
         )
         cooling_rate_tests.append(filepath)
-        print(filepath)
+        print("Cooling rate test: ", filepath)
 
     # Generate random maps with different average distances between the cities
     # where they have the same average city distance
@@ -75,7 +75,6 @@ def gen_rand_cities() -> dict[str, list[str]]:
     temperature_tests = []
     for rand_city_dist in RAND_CITY_DISTS:
     
-
         # Scale the city positions to the desired avg city distance
         scale = rand_city_dist / city_dist
         scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
@@ -86,7 +85,7 @@ def gen_rand_cities() -> dict[str, list[str]]:
             "randomly generated temperature test"
         )
         temperature_tests.append(filepath)
-        print(filepath)
+        print("Temperature test:  ", filepath)
 
     return {
         "temperature_tests": temperature_tests,
@@ -128,23 +127,23 @@ def benchmark_rand(files: dict[str, list[str]]) -> None:
     @param files: dictionary containing list of file paths for the different problems
     """
 
-    for temperature in RAND_TEMPERATURES:
-        for data_file in files["temperature_tests"]:
-            problem = data_file.removeprefix("data/")
-            results = []
-            for _ in range(RAND_TEST_REPEATS):
-                result = run_test(data_file, temperature, RAND_CONST_COOLING_RATE)
-                results.append(result)
-            print(write_results(problem, temperature, RAND_CONST_COOLING_RATE, results))
-
-    # for cooling_rate in RAND_COOLING_RATES:
-    #     for data_file in files["cooling_rate_tests"]:
+    # for temperature in RAND_TEMPERATURES:
+    #     for data_file in files["temperature_tests"]:
     #         problem = data_file.removeprefix("data/")
     #         results = []
     #         for _ in range(RAND_TEST_REPEATS):
-    #             result = run_test(data_file, RAND_CONST_TEMPERATURE, cooling_rate)
+    #             result = run_test(data_file, temperature, RAND_CONST_COOLING_RATE)
     #             results.append(result)
-    #         print(write_results(problem, RAND_CONST_TEMPERATURE, cooling_rate, results))
+    #         print(write_results(problem, temperature, RAND_CONST_COOLING_RATE, results))
+
+    for cooling_rate in RAND_COOLING_RATES:
+        for data_file in files["cooling_rate_tests"]:
+            problem = data_file.removeprefix("data/")
+            results = []
+            for _ in range(RAND_TEST_REPEATS):
+                result = run_test(data_file, RAND_CONST_TEMPERATURE, cooling_rate)
+                results.append(result)
+            print(write_results(problem, RAND_CONST_TEMPERATURE, cooling_rate, results))
     return None
 
 

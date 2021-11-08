@@ -1,4 +1,6 @@
-# Variables for the visualisation
+"""
+Visualisation variables
+"""
 WIDTH = 1280
 HEIGHT = 720
 BORDER = 40
@@ -7,20 +9,23 @@ BEST_PATH_COLOUR = (0, 153, 255)
 CURR_PATH_COLOUR = (75, 75, 75)
 CITY_SIZE = 4
 
-# Variables for the benchmarking (stored here so it can be accessed by ipynb)
+"""
+Variables for the benchmarking (stored here so it can be accessed by ipynb)
+"""
+# For TSPLIB testing
 TSPLIB_TEST_REPEATS = 20
 TSPLIB_TEMPERATURES = [10, 50, 100, 500, 1_000, 5_000]
 TSPLIB_COOLING_RATES = [0.999, 0.999_5, 0.999_9, 0.999_95]
 
-# Variables for generating random cities for testing
+# For Random Dataset generation
 RAND_CITY_DISTS = [1, 10, 100, 1000, 10_000, 100_000, 1_000_000]
 RAND_CITY_COUNTS = [10, 50, 100, 500, 1_000, 1_500]
 RAND_CONST_CITY_COUNT = 150
 RAND_CONST_CITY_DIST = 200
 
-# Variables for benchmarking against random city sets
+# For Random Dataset testing
 RAND_TEST_REPEATS = 50
 RAND_TEMPERATURES = [1, 10, 100, 1_000, 1_00_000, 1_000_000]
-RAND_COOLING_RATES = [0.999, 0.9995, 0.999_9, 0.999_95, 0.999_99]
+RAND_COOLING_RATES = [0, 0.999, 0.9995, 0.999_9, 0.999_95, 0.999_99]
 RAND_CONST_TEMPERATURE = 20
 RAND_CONST_COOLING_RATE = 0.995
