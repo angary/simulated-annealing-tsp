@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import dist
 from random import randint
 
 
@@ -76,3 +77,30 @@ def normalise_coords(cities: list[tuple[float, float]], height: int, width: int,
         normalised_y = height - int(scale * (c[1] + min_y)) - border
         normalised.append((normalised_x, normalised_y))
     return normalised
+
+
+def get_diff_city_dist(cities: list[tuple[float, float]]) -> float:
+    """
+    Get the distances between all the cities, and then return the
+    average difference of the distances
+
+    @param cities: a list of the coordinates of the cities
+    @return: the average difference in distances between the cities
+    """
+    n = len(cities)
+
+    # Generate all combination of paths
+    dists = []
+    for i in range(n - 1):
+        dists += [dist(cities[i], cities[j]) for j in range(i + 1, n)]
+    m = n * (n - 1) // 2
+
+    # Sum up the difference in city distances
+    total = 0
+    for i in range(m - 1):
+        for j in range(i + 1, m):
+            total += abs(dists[i] - dists[j])
+
+    # Return the average distance
+    return total / ((m * (m - 1)) / 2)
+

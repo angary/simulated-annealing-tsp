@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 import math
-
-
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from heapq import heappop, heappush
 from math import dist, factorial
 from random import randrange, shuffle, uniform
-
 
 INFTY = float("inf")
 
@@ -41,21 +38,6 @@ class Solver(ABC):
             return SimulatedAnnealing(cities)
         raise Exception("Invalid solver name")
 
-    @staticmethod
-    def avg_city_dist(cities: list[tuple[int, int]]) -> float:
-        """
-        Find the sum of the paths between all the cities and then
-        divide it by the number of cities
-
-        @param cities: a list of the coordinates of the cities
-        @return: the average distance between all the cities
-        """
-        n = len(cities)
-        total_dist = 0
-        for i in range(n - 1):
-            for j in range(i + 1, n):
-                total_dist += dist(cities[i], cities[j])
-        return total_dist / (n * (n - 1) / 2)
 
     def get_total_dist(self, order: list[int]) -> float:
         """

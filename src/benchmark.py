@@ -6,13 +6,12 @@ import os
 import random
 
 from src.config import \
-    TSPLIB_TEST_REPEATS, TSPLIB_TEMPERATURES, TSPLIB_COOLING_RATES, \
-    RAND_CITY_DISTS, RAND_CITY_COUNTS, RAND_MAP_COUNT, \
-    RAND_CONST_CITY_DIST, RAND_CONST_CITY_COUNT, \
-    RAND_TEMPERATURES, RAND_TEST_REPEATS, RAND_COOLING_RATES, \
-    RAND_CONST_TEMPERATURE, RAND_CONST_COOLING_RATE
-from src.setup import get_random_cities, load_cities
-from src.solvers import Solver, SimulatedAnnealing
+    TEST_REPEATS, TEMPERATURES, COOLING_RATES, \
+    CITY_COUNTS, DIST_DIFFS, MAP_COUNT, \
+    CONST_CITY_COUNT, CONST_DIST_DIFF, \
+    CONST_TEMPERATURE, CONST_COOLING_RATE
+from src.setup import get_diff_city_dist, get_random_cities, load_cities
+from src.solvers import SimulatedAnnealing
 
 
 def main() -> None:
@@ -50,19 +49,18 @@ def gen_rand_cities() -> dict[str, list[str]]:
     # Generate random maps with different city count
     # where they have the same size
     cooling_rate_tests = []
-    for city_count in RAND_CITY_COUNTS:
-        for repeat in range(RAND_MAP_COUNT):
+    for city_count in CITY_COUNTS:
+        for repeat in range(MAP_COUNT):
             # Generate random points and find their average distance
             cities = get_random_cities(1000, 1000, city_count)
-            city_dist = Solver.avg_city_dist(cities)
 
             # For every city scale their coordinate so they have correct avg dist
-            scale = RAND_CONST_CITY_DIST / city_dist
+            scale = CONST_DIST_DIFF / get_diff_city_dist(cities)
             cities = [(i * scale, j * scale) for (i, j) in cities]
 
             filepath = save_cities_into_file(
                 cities,
-                RAND_CONST_CITY_DIST,
+                CONST_DIST_DIFF,
                 repeat,
                 "randomly generated cooling rate test"
             )
@@ -72,15 +70,13 @@ def gen_rand_cities() -> dict[str, list[str]]:
     # Generate random maps with different average distances between the cities
     # where they have the same average city distance
     cities_list = [
-        get_random_cities(1000, 1000, RAND_CONST_CITY_COUNT) for _ in range(RAND_MAP_COUNT)
+        get_random_cities(1000, 1000, CONST_CITY_COUNT) for _ in range(MAP_COUNT)
     ]
-    city_dist = Solver.avg_city_dist(cities)
     temperature_tests = []
-    for rand_city_dist in RAND_CITY_DISTS:
-        
+    for rand_city_dist in DIST_DIFFS:
         for repeat, cities in enumerate(cities_list):
             # Scale the city positions to the desired avg city distance
-            scale = rand_city_dist / city_dist
+            scale = rand_city_dist / get_diff_city_dist(cities)
             scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
 
             filepath = save_cities_into_file(
@@ -109,7 +105,7 @@ def save_cities_into_file(cities: list[tuple[int, int]], size: int, i: int, comm
     @return: the path to the file
     """
     n = len(cities)
-    name = f"rand{size}_{n}_{i}"
+    name = f"rand{n}_{size}_{i}"
     filename = f"data/{name}.tsp"
     with open(filename, "w+") as f:
         f.writelines([
@@ -134,22 +130,22 @@ def benchmark_rand(files: dict[str, list[str]]) -> None:
     """
 
     for data_file in files["temperature_tests"]:
-        for temperature in RAND_TEMPERATURES:
+        for temperature in TEMPERATURES:
             problem = data_file.removeprefix("data/")
             results = []
-            for _ in range(RAND_TEST_REPEATS):
-                result = run_test(data_file, temperature, RAND_CONST_COOLING_RATE)
+            for _ in range(TEST_REPEATS):
+                result = run_test(data_file, temperature, CONST_COOLING_RATE)
                 results.append(result)
-            print(write_results(problem, temperature, RAND_CONST_COOLING_RATE, results))
+            print(write_results(problem, temperature, CONST_COOLING_RATE, results))
 
     for data_file in files["cooling_rate_tests"]:
-        for cooling_rate in RAND_COOLING_RATES:
+        for cooling_rate in COOLING_RATES:
             problem = data_file.removeprefix("data/")
             results = []
-            for _ in range(RAND_TEST_REPEATS):
-                result = run_test(data_file, RAND_CONST_TEMPERATURE, cooling_rate)
+            for _ in range(TEST_REPEATS):
+                result = run_test(data_file, CONST_TEMPERATURE, cooling_rate)
                 results.append(result)
-            print(write_results(problem, RAND_CONST_TEMPERATURE, cooling_rate, results))
+            print(write_results(problem, CONST_TEMPERATURE, cooling_rate, results))
     return None
 
 
@@ -163,10 +159,8 @@ def benchmark_tsplib() -> None:
     all_files = os.listdir("data")
     data = set(map(remove_file_extension, all_files))
 
-    # Only select problems that have an optimal tour
+    # Only select problems that have an optimal tour, and sort by num cities
     data_files = [f"data/{f}" for f in data if f"{f}.opt.tour" in all_files]
-
-    # Sort them by the number of nodes
     data_files.sort(key=lambda name: int("".join([s for s in name if s.isdigit()])))
 
     # Loop through each file and then test the file
@@ -174,13 +168,13 @@ def benchmark_tsplib() -> None:
         problem = data_file.removeprefix("data/").removesuffix(".tsp")
 
         # Test what happens when temperature is 0 (doesn't matter what cooling rate is
-        greedy_results = [benchmark(data_file, 0, 0) for _ in range(TSPLIB_TEST_REPEATS)]
+        greedy_results = [benchmark(data_file, 0, 0) for _ in range(TEST_REPEATS)]
         print(write_results(problem, 0, 0, greedy_results))
 
         # Test for combination of temperature and cooling rates
-        for t in TSPLIB_TEMPERATURES:
-            for r in TSPLIB_COOLING_RATES:
-                results = [benchmark(data_file, t, r) for _ in range(TSPLIB_TEST_REPEATS)]
+        for t in TEMPERATURES:
+            for r in COOLING_RATES:
+                results = [benchmark(data_file, t, r) for _ in range(TEST_REPEATS)]
                 print(write_results(problem, t, r, results))
     return
 
@@ -269,7 +263,7 @@ def benchmark(filename: str, t: int, r: int) -> dict[str, float]:
         "solver_dist": solver_dist,
         "optimality": soln_dist / solver_dist,
         "temperature": solver.initial_temperature,
-        "avg_city_dist": solver.avg_city_dist(loaded_cities),
+        "avg_city_dist": get_diff_city_dist(loaded_cities),
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.node_count,
         "iterations": solver.iterations - solver.max_repeats,
