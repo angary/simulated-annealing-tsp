@@ -89,18 +89,18 @@ def get_diff_city_dist(cities: list[tuple[float, float]]) -> float:
     """
     n = len(cities)
 
-    # Generate all combination of paths
-    dists = []
-    for i in range(n - 1):
-        dists += [dist(cities[i], cities[j]) for j in range(i + 1, n)]
+    # Generate all combination of distances in sorted order in O(n^2 log n)
+    dists = sorted([dist(cities[i], cities[j]) for i in range(n - 1) for j in range(i + 1, n)])
     m = n * (n - 1) // 2
 
-    # Sum up the difference in city distances
-    total = 0
-    for i in range(m - 1):
-        for j in range(i + 1, m):
-            total += abs(dists[i] - dists[j])
+    # Find the total difference between the smallest distance and the rest
+    prev_diff = sum([x - dists[0] for x in dists[1:]])
+
+    # Loop over the rest of the values calculating total difference
+    total_diff = prev_diff
+    for i in range(1, m):
+        prev_diff = prev_diff - (dists[i] - dists[i - 1]) * (m - i)
+        total_diff += prev_diff
 
     # Return the average distance
-    return total / ((m * (m - 1)) / 2)
-
+    return total_diff / ((m * (m - 1)) / 2)
