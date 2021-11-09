@@ -50,7 +50,7 @@ def gen_rand_cities() -> dict[str, list[str]]:
     # where they have the same size
     cooling_rate_tests = []
     for city_count in CITY_COUNTS:
-        for repeat in range(MAP_COUNT):
+        for i in range(MAP_COUNT):
             # Generate random points and find their average distance
             cities = get_random_cities(1000, 1000, city_count)
 
@@ -59,10 +59,7 @@ def gen_rand_cities() -> dict[str, list[str]]:
             cities = [(i * scale, j * scale) for (i, j) in cities]
 
             filepath = save_cities_into_file(
-                cities,
-                CONST_DIST_DIFF,
-                repeat,
-                "randomly generated cooling rate test"
+                cities, CONST_DIST_DIFF, i, "random cooling rate test"
             )
             cooling_rate_tests.append(filepath)
             print("Cooling rate test: ", filepath)
@@ -74,16 +71,13 @@ def gen_rand_cities() -> dict[str, list[str]]:
     ]
     temperature_tests = []
     for rand_city_dist in DIST_DIFFS:
-        for repeat, cities in enumerate(cities_list):
+        for i, cities in enumerate(cities_list):
             # Scale the city positions to the desired avg city distance
             scale = rand_city_dist / get_diff_city_dist(cities)
             scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
 
             filepath = save_cities_into_file(
-                scaled_cities,
-                rand_city_dist,
-                repeat,
-                "randomly generated temperature test"
+                scaled_cities, rand_city_dist, i, "random temperature test"
             )
             temperature_tests.append(filepath)
             print("Temperature test:  ", filepath)
@@ -99,7 +93,7 @@ def save_cities_into_file(cities: list[tuple[int, int]], size: int, i: int, comm
     Given a list of cities, save the data into a file in TSPLIB format
 
     @param cities: A list of the coordinates of the cities
-    @param size: the average distance between all the cities
+    @param size: the average difference in distance between all the cities
     @param i: integer represented the number of repeats
     @param comment: the comment to add in the file
     @return: the path to the file
@@ -130,22 +124,14 @@ def benchmark_rand(files: dict[str, list[str]]) -> None:
     """
 
     for data_file in files["temperature_tests"]:
-        for temperature in TEMPERATURES:
-            problem = data_file.removeprefix("data/")
-            results = []
-            for _ in range(TEST_REPEATS):
-                result = run_test(data_file, temperature, CONST_COOLING_RATE)
-                results.append(result)
-            print(write_results(problem, temperature, CONST_COOLING_RATE, results))
+        for t in TEMPERATURES:
+            results = [run_test(data_file, t, CONST_COOLING_RATE) for _ in range(TEST_REPEATS)]
+            print(write_results(data_file.removeprefix("data/"), t, CONST_COOLING_RATE, results))
 
     for data_file in files["cooling_rate_tests"]:
-        for cooling_rate in COOLING_RATES:
-            problem = data_file.removeprefix("data/")
-            results = []
-            for _ in range(TEST_REPEATS):
-                result = run_test(data_file, CONST_TEMPERATURE, cooling_rate)
-                results.append(result)
-            print(write_results(problem, CONST_TEMPERATURE, cooling_rate, results))
+        for cr in COOLING_RATES:
+            results = [run_test(data_file, CONST_TEMPERATURE, cr) for _ in range(TEST_REPEATS)]
+            print(write_results(data_file.removeprefix("data/"), CONST_TEMPERATURE, cr, results))
     return None
 
 
@@ -210,7 +196,7 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
     """
     # Find problem and cities
     loaded_cities = load_cities(filename)
-    avg_city_dist = int("".join([c for c in filename.split("_")[0] if c.isdigit()]))
+    avg_dist_diff = int("".join([c for c in filename.split("_")[1] if c.isdigit()]))
     map_num = int("".join([c for c in filename.split("_")[2] if c.isdigit()]))
 
     # Get solver's solution
@@ -223,7 +209,7 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
     return {
         "solver_dist": solver_dist,
         "temperature": solver.initial_temperature,
-        "avg_city_dist": avg_city_dist,
+        "avg_dist_diff": avg_dist_diff,
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.node_count,
         "iterations": solver.iterations - solver.max_repeats,
@@ -263,7 +249,7 @@ def benchmark(filename: str, t: int, r: int) -> dict[str, float]:
         "solver_dist": solver_dist,
         "optimality": soln_dist / solver_dist,
         "temperature": solver.initial_temperature,
-        "avg_city_dist": get_diff_city_dist(loaded_cities),
+        "avg_dist_diff": get_diff_city_dist(loaded_cities),
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.node_count,
         "iterations": solver.iterations - solver.max_repeats,
