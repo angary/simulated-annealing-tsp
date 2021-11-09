@@ -7,7 +7,7 @@ import random
 
 from src.config import \
     TSPLIB_TEST_REPEATS, TSPLIB_TEMPERATURES, TSPLIB_COOLING_RATES, \
-    RAND_CITY_DISTS, RAND_CITY_COUNTS, \
+    RAND_CITY_DISTS, RAND_CITY_COUNTS, RAND_MAP_COUNT, \
     RAND_CONST_CITY_DIST, RAND_CONST_CITY_COUNT, \
     RAND_TEMPERATURES, RAND_TEST_REPEATS, RAND_COOLING_RATES, \
     RAND_CONST_TEMPERATURE, RAND_CONST_COOLING_RATE
@@ -51,41 +51,46 @@ def gen_rand_cities() -> dict[str, list[str]]:
     # where they have the same size
     cooling_rate_tests = []
     for city_count in RAND_CITY_COUNTS:
+        for repeat in range(RAND_MAP_COUNT):
+            # Generate random points and find their average distance
+            cities = get_random_cities(1000, 1000, city_count)
+            city_dist = Solver.avg_city_dist(cities)
 
-        # Generate random points and find their average distance
-        cities = get_random_cities(1000, 1000, city_count)
-        city_dist = Solver.avg_city_dist(cities)
+            # For every city scale their coordinate so they have correct avg dist
+            scale = RAND_CONST_CITY_DIST / city_dist
+            cities = [(i * scale, j * scale) for (i, j) in cities]
 
-        # For every city scale their coordinate so they have correct avg dist
-        scale = RAND_CONST_CITY_DIST / city_dist
-        cities = [(i * scale, j * scale) for (i, j) in cities]
-
-        filepath = save_cities_into_file(
-            cities,
-            RAND_CONST_CITY_DIST,
-            "randomly generated cooling rate test"
-        )
-        cooling_rate_tests.append(filepath)
-        print("Cooling rate test: ", filepath)
+            filepath = save_cities_into_file(
+                cities,
+                RAND_CONST_CITY_DIST,
+                repeat,
+                "randomly generated cooling rate test"
+            )
+            cooling_rate_tests.append(filepath)
+            print("Cooling rate test: ", filepath)
 
     # Generate random maps with different average distances between the cities
     # where they have the same average city distance
-    cities = get_random_cities(1000, 1000, RAND_CONST_CITY_COUNT)
+    cities_list = [
+        get_random_cities(1000, 1000, RAND_CONST_CITY_COUNT) for _ in range(RAND_MAP_COUNT)
+    ]
     city_dist = Solver.avg_city_dist(cities)
     temperature_tests = []
     for rand_city_dist in RAND_CITY_DISTS:
-    
-        # Scale the city positions to the desired avg city distance
-        scale = rand_city_dist / city_dist
-        scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
+        
+        for repeat, cities in enumerate(cities_list):
+            # Scale the city positions to the desired avg city distance
+            scale = rand_city_dist / city_dist
+            scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
 
-        filepath = save_cities_into_file(
-            scaled_cities,
-            rand_city_dist,
-            "randomly generated temperature test"
-        )
-        temperature_tests.append(filepath)
-        print("Temperature test:  ", filepath)
+            filepath = save_cities_into_file(
+                scaled_cities,
+                rand_city_dist,
+                repeat,
+                "randomly generated temperature test"
+            )
+            temperature_tests.append(filepath)
+            print("Temperature test:  ", filepath)
 
     return {
         "temperature_tests": temperature_tests,
@@ -93,17 +98,18 @@ def gen_rand_cities() -> dict[str, list[str]]:
     }
 
 
-def save_cities_into_file(cities: list[tuple[int, int]], size: int, comment: str = "") -> str:
+def save_cities_into_file(cities: list[tuple[int, int]], size: int, i: int, comment: str = "") -> str:
     """
     Given a list of cities, save the data into a file in TSPLIB format
 
     @param cities: A list of the coordinates of the cities
     @param size: the average distance between all the cities
+    @param i: integer represented the number of repeats
     @param comment: the comment to add in the file
     @return: the path to the file
     """
     n = len(cities)
-    name = f"rand{size}_{n}"
+    name = f"rand{size}_{n}_{i}"
     filename = f"data/{name}.tsp"
     with open(filename, "w+") as f:
         f.writelines([
@@ -127,17 +133,17 @@ def benchmark_rand(files: dict[str, list[str]]) -> None:
     @param files: dictionary containing list of file paths for the different problems
     """
 
-    # for temperature in RAND_TEMPERATURES:
-    #     for data_file in files["temperature_tests"]:
-    #         problem = data_file.removeprefix("data/")
-    #         results = []
-    #         for _ in range(RAND_TEST_REPEATS):
-    #             result = run_test(data_file, temperature, RAND_CONST_COOLING_RATE)
-    #             results.append(result)
-    #         print(write_results(problem, temperature, RAND_CONST_COOLING_RATE, results))
+    for data_file in files["temperature_tests"]:
+        for temperature in RAND_TEMPERATURES:
+            problem = data_file.removeprefix("data/")
+            results = []
+            for _ in range(RAND_TEST_REPEATS):
+                result = run_test(data_file, temperature, RAND_CONST_COOLING_RATE)
+                results.append(result)
+            print(write_results(problem, temperature, RAND_CONST_COOLING_RATE, results))
 
-    for cooling_rate in RAND_COOLING_RATES:
-        for data_file in files["cooling_rate_tests"]:
+    for data_file in files["cooling_rate_tests"]:
+        for cooling_rate in RAND_COOLING_RATES:
             problem = data_file.removeprefix("data/")
             results = []
             for _ in range(RAND_TEST_REPEATS):
@@ -165,7 +171,7 @@ def benchmark_tsplib() -> None:
 
     # Loop through each file and then test the file
     for data_file in data_files:
-        problem = data_file.removeprefix("data/")
+        problem = data_file.removeprefix("data/").removesuffix(".tsp")
 
         # Test what happens when temperature is 0 (doesn't matter what cooling rate is
         greedy_results = [benchmark(data_file, 0, 0) for _ in range(TSPLIB_TEST_REPEATS)]
@@ -189,6 +195,7 @@ def write_results(problem: str, t: float, r: float, results: list[dict[str, floa
     @param results: list of the results
     @return: the path to the result file
     """
+    problem = problem.replace(".tsp", "")
     result_file = f"results/{problem}_{t}_{r}.csv"
     with open(result_file, "w+") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=results[0].keys())
@@ -210,6 +217,7 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
     # Find problem and cities
     loaded_cities = load_cities(filename)
     avg_city_dist = int("".join([c for c in filename.split("_")[0] if c.isdigit()]))
+    map_num = int("".join([c for c in filename.split("_")[2] if c.isdigit()]))
 
     # Get solver's solution
     solver = SimulatedAnnealing(loaded_cities, temperature=t, cooling_rate=r)
@@ -225,6 +233,7 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.node_count,
         "iterations": solver.iterations - solver.max_repeats,
+        "map_num": map_num,
     }
 
 
