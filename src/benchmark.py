@@ -88,7 +88,12 @@ def gen_rand_cities() -> dict[str, list[str]]:
     }
 
 
-def save_cities_into_file(cities: list[tuple[int, int]], size: int, i: int, comment: str = "") -> str:
+def save_cities_into_file(
+    cities: list[tuple[float, float]],
+    size: int,
+    i: int,
+    comment: str = ""
+) -> str:
     """
     Given a list of cities, save the data into a file in TSPLIB format
 
@@ -105,10 +110,10 @@ def save_cities_into_file(cities: list[tuple[int, int]], size: int, i: int, comm
         f.writelines([
             f"NAME : {name}\n",
             f"COMMENT : {comment}\n",
-            f"TYPE : TSP\n",
+            "TYPE : TSP\n",
             f"DIMENSION : {n}\n",
-            f"EDGE_WEIGHT_TYPE : EUC_2D\n",
-            f"NODE_COORD_SECTION\n"
+            "EDGE_WEIGHT_TYPE : EUC_2D\n",
+            "NODE_COORD_SECTION\n"
         ])
         for i, city in enumerate(cities):
             f.write(f"{i + 1}\t{city[0]}\t{city[1]}\n")
@@ -185,7 +190,7 @@ def write_results(problem: str, t: float, r: float, results: list[dict[str, floa
     return result_file
 
 
-def run_test(filename: str, t: int, r: int) -> dict[str, float]:
+def run_test(filename: str, t: int, r: float) -> dict[str, float]:
     """
     Run test on a problem without comparing to the solution
 
@@ -211,13 +216,13 @@ def run_test(filename: str, t: int, r: int) -> dict[str, float]:
         "temperature": solver.initial_temperature,
         "avg_dist_diff": avg_dist_diff,
         "cooling_rate": solver.cooling_rate,
-        "city_count": solver.node_count,
+        "city_count": solver.n,
         "iterations": solver.iterations - solver.max_repeats,
         "map_num": map_num,
     }
 
 
-def benchmark(filename: str, t: int, r: int) -> dict[str, float]:
+def benchmark(filename: str, t: int, r: float) -> dict[str, float]:
     """
     Benchmark the simulated annealing solver against a problem
 
@@ -251,7 +256,7 @@ def benchmark(filename: str, t: int, r: int) -> dict[str, float]:
         "temperature": solver.initial_temperature,
         "avg_dist_diff": get_diff_city_dist(loaded_cities),
         "cooling_rate": solver.cooling_rate,
-        "city_count": solver.node_count,
+        "city_count": solver.n,
         "iterations": solver.iterations - solver.max_repeats,
     }
 
@@ -270,7 +275,7 @@ def load_soln(filepath: str) -> list[int]:
         try:
             return list(map(lambda x: int(x) - 1, lines[start:end]))
         except ValueError:
-            lines = [i for i in " ".join(lines[start:end]).split()]
+            lines = list(" ".join(lines[start:end]).split())
             return list(map(lambda x: int(x) - 1, lines))
 
 

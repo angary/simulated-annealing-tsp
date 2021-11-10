@@ -4,7 +4,7 @@ from math import dist
 from random import randint
 
 
-def get_random_cities(height: int, width: int, n: int) -> list[tuple[int, int]]:
+def get_random_cities(height: int, width: int, n: int) -> list[tuple[float, float]]:
     """
     Generate a series of random coordinates within the bounds of the
     height and width
@@ -16,7 +16,7 @@ def get_random_cities(height: int, width: int, n: int) -> list[tuple[int, int]]:
     """
     cities = []
     for _ in range(n):
-        cities.append((randint(0, width - 1), randint(0, height - 1)))
+        cities.append((float(randint(0, width - 1)), float(randint(0, height - 1))))
     return cities
 
 
@@ -35,12 +35,16 @@ def load_cities(filepath: str) -> list[tuple[float, float]]:
         lines = lines[start:end]
         for line in lines:
             coords = list(map(float, line.split()[1:3]))
-            coords.reverse()
-            cities.append(coords)
+            cities.append((coords[1], coords[0]))
     return cities
 
 
-def normalise_coords(cities: list[tuple[float, float]], height: int, width: int, border: int) -> list[tuple[int, int]]:
+def normalise_coords(
+    cities: list[tuple[float, float]],
+    height: int,
+    width: int,
+    border: int
+) -> list[tuple[float, float]]:
     """
     Given the list of cities, return a new list, which ensures that the
     coordinates are all positive and scale their values so they all lie
@@ -68,8 +72,8 @@ def normalise_coords(cities: list[tuple[float, float]], height: int, width: int,
     normalised = []
     for c in cities:
         # Ensure that all the cities are properly scaled
-        normalised_x = int(scale * (c[0] + min_x)) + border
-        normalised_y = height - int(scale * (c[1] + min_y)) - border
+        normalised_x = (scale * (c[0] + min_x)) + border
+        normalised_y = height - scale * (c[1] + min_y) - border
         normalised.append((normalised_x, normalised_y))
     return normalised
 

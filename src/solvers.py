@@ -14,13 +14,13 @@ class Solver(ABC):
     def __init__(self, cities: list[tuple[int, int]]):
         self.cities = cities
         self.n = len(cities)
-        self.order = [i for i in range(self.n)]
+        self.order = list(range(self.n))
         self.adj = [
             [dist(i, j) if i != j else 0 for i in cities] for j in cities
         ]
 
     @staticmethod
-    def get_solver(solver_name: str, cities: list[tuple[int, int]]) -> "Solver":
+    def get_solver(solver_name: str, cities: list[tuple[float, float]]) -> "Solver":
         """
         Return a new solver based off the name
 
@@ -46,7 +46,7 @@ class Solver(ABC):
         """
         if not order:
             return 0
-        total = 0
+        total = 0.0
         for i in range(len(order) - 1):
             total += self.adj[order[i + 1]][order[i]]
         total += self.adj[order[-1]][order[0]]
@@ -59,7 +59,6 @@ class Solver(ABC):
         has found the optimal (or what it determines) to be
         the optimal solution
         """
-        pass
 
     @abstractmethod
     def get_next_order(self) -> list[int]:
@@ -67,20 +66,21 @@ class Solver(ABC):
         Returns the list of the next ordering of the path.
         @return an empty list if there is no more orderings.
         """
-        pass
 
     @abstractmethod
     def get_best_order(self) -> list[int]:
         """
         @return the list of the current best ordering.
         """
-        pass
 
 
 ################################################################################
 
 
 class SimulatedAnnealing(Solver):
+    """
+    Solver using the simulated annealing algorithm
+    """
 
     def __init__(self, cities, temperature: float = 100, cooling_rate: float = 0.999):
         super().__init__(cities)
@@ -173,6 +173,9 @@ class SimulatedAnnealing(Solver):
 
 
 class BruteForce(Solver):
+    """
+    Solver by brute forcing the lexicographical ordering
+    """
 
     def __init__(self, cities):
         super().__init__(cities)
@@ -222,6 +225,9 @@ class BruteForce(Solver):
 
 
 class BranchAndBound(Solver):
+    """
+    Solver using the branch and bound algorithm
+    """
 
     def __init__(self, cities):
         super().__init__(cities)
@@ -238,7 +244,6 @@ class BranchAndBound(Solver):
         order = self.get_best_order()
         while len(order) < self.n:
             order = self.get_best_order()
-        return
 
     def get_next_order(self) -> list[int]:
         """
@@ -269,7 +274,7 @@ class BranchAndBound(Solver):
 
             new_order = curr_path.order + [next_node]
             heappush(self.paths, BranchAndBoundPath(new_adj, new_cost, new_order))
-        
+
         result = self.get_best_order()
         self.found_best = len(result) == self.n
         return result
@@ -283,6 +288,10 @@ class BranchAndBound(Solver):
 
 
 class BranchAndBoundPath:
+    """
+    A class for which contains an adjacency matrix, cost and ordering which
+    has an __lt__ method to support sorting by cost
+    """
 
     def __init__(self, adj: list[list[float]], cost: float, order: list[int]):
         self.adj = adj
@@ -305,11 +314,9 @@ def set_infty(arr: list[list[float]], r: int, c: int) -> list[list[float]]:
     """
     n = len(arr)
     return [[INFTY if (i == r or j == c) else arr[i][j] for j in range(n)] for i in range(n)]
-    
 
 
-
-def reduce_adj(arr: list[list[float]], n: int) -> int:
+def reduce_adj(arr: list[list[float]], n: int) -> float:
     """
     Subtract the minimum value of each row from the row, and subtract the
     minimum value of each col from the col. Then return the total subtracted
@@ -317,7 +324,7 @@ def reduce_adj(arr: list[list[float]], n: int) -> int:
     @param arr: 2d list of floats
     @return: the total value reduced
     """
-    total = 0
+    total = 0.0
 
     for i in range(n):
         row = [val for val in arr[i] if val != INFTY]
@@ -336,4 +343,3 @@ def reduce_adj(arr: list[list[float]], n: int) -> int:
                 if arr[i][j] != INFTY:
                     arr[i][j] -= col_min
     return total
-

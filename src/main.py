@@ -11,8 +11,8 @@ from src.solvers import Solver
 
 # Problem variables
 city_count = 0
-cities = []
-order = []
+cities: list[tuple[float, float]] = []
+order: list[int] = []
 solver = Solver.get_solver("simulated annealing", cities)
 iteration = 0
 
@@ -39,11 +39,8 @@ def main() -> None:
     else:
         cities = get_random_cities(HEIGHT, WIDTH, city_count)
         solver = Solver.get_solver(solver_name, cities)
-    order = [i for i in range(city_count)]
-
+    order = list(range(city_count))
     run()
-
-    return
 
 
 def setup() -> None:
@@ -51,11 +48,10 @@ def setup() -> None:
     background(*BG_COLOUR)
     fill(*BEST_PATH_COLOUR)
     no_fill()
-    return
 
 
 def draw() -> None:
-    global cities, order, iteration
+    global order, iteration
     iteration += 1
     background(*BG_COLOUR)
 
@@ -67,11 +63,9 @@ def draw() -> None:
     # Can draw cities here, but very computationally intensive
     if show_cities:
         draw_cities()
-
     # Speed up drawing
     for _ in range(city_count * speed):
-        solver.get_next_order()
-    
+        solver.get_next_order()    
     # Get next ordering
     new_order = order
     while new_order == order:
@@ -80,7 +74,6 @@ def draw() -> None:
     print(solver.get_total_dist(order))
     if not order:
         no_loop()
-    return
 
 
 def key_pressed(event) -> None:
@@ -100,35 +93,28 @@ def key_pressed(event) -> None:
         else:
             loop()
         paused = not paused
-
     elif event.key == "c":
         # TODO: Show cities if it is paused
         global show_cities
-        show_cities = not show_cities
-    
+        show_cities = not show_cities    
     elif event.key == "LEFT":
         # Halve the speed
         speed = max(1, speed // 2)
         print(f"{speed = }")
-    
     elif event.key == "RIGHT":
         # Double the speed
         speed = min(256, speed * 2)
         print(f"{speed = }")
-    
-    return
 
 
 def draw_cities() -> None:
     """
     Given the cities, draw then out on the screen
     """
-    global cities
     fill(*BEST_PATH_COLOUR)
     for x, y in cities:
         ellipse(x, y, CITY_SIZE, CITY_SIZE)
     no_fill()
-    return
 
 
 def draw_path(ordering: list[int]) -> None:
@@ -143,30 +129,23 @@ def draw_path(ordering: list[int]) -> None:
         vertex(*cities[i])
     vertex(*cities[ordering[0]])
     end_shape()
-    return
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-c",
-        "--city-count",
-        type=int,
-        default=100,
+        "-c", "--city-count",
+        type=int, default=100,
         help="the number of cities in the problem"
     )
     parser.add_argument(
-        "-s",
-        "--solver",
-        type=str,
-        default="simulated annealing",
+        "-s", "--solver",
+        type=str, default="simulated annealing",
         help="the type of tsp solver to use"
     )
     parser.add_argument(
-        "-f",
-        "--file",
-        type=str,
-        default=None,
+        "-f", "--file",
+        type=str, default=None,
         help="the filename of the tsp problem - if none is selected, then a random problem is generated"
     )
     return parser.parse_args()
