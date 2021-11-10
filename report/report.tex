@@ -7,6 +7,7 @@
 \usepackage{enumerate}
 \usepackage{float}
 \usepackage{graphicx}
+\usepackage{makecell}
 \usepackage{mathtools}
 \usepackage{pgfplots}
 \usepackage{subcaption}
@@ -20,32 +21,44 @@
 % Path for images
 \graphicspath{ {./images/} }
 
+% Make table headings bold
+\renewcommand\theadfont{}
+\renewcommand\theadalign{bc}
 
+% Remove indentation
 \setlength\parindent{0pt}
+
+\setlength{\belowcaptionskip}{-6pt}
 
 
 \title{
-    Parameterising Temperature and Cooling Rate \\
-    \large for Simulated Annealing applied to the \\
-    Travelling Salesman Problem
+    Parameterising Simulated Annealing \\
+    \large for the Travelling Salesman Problem
 }
 
-\author{Gary Sun}
+\author{
+    Gary Sun \\
+    \large University of New South Wales
+}
 
-\date{2021}
+\date{Nov 2021}
 
 \begin{document}
 
+% Reduce margin to squeeze everything in
+\newgeometry{margin=1in}
+
 \maketitle
-
 \begin{abstract}
+    \centering
     In this paper, we explore the impact of different values of initial temperatures and cooling rates for Simulated Annealing.
-    These values are bench marked using the Travelling Salesman Problem, to determine the impact of the values for different inputs. 
-    Finally, we determine if there is a correlation between the ideal initial temperature and cooling rate with the given problem model, and subsequently a way to parameterise the temperature and cooling rate based off the input.
+    These values are bench marked using the Travelling Salesman Problem, to determine their impact on optimality and runtime. 
+    Finally, we determine if there is a correlation between the initial temperature and cooling rate with the input cities, and hence a way to parameterise the temperature and cooling rate.
 \end{abstract}
-
 \tableofcontents
+\restoregeometry
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Introduction}
@@ -67,7 +80,7 @@ Whilst this halves the number of solutions as compared to the asymmetric TSP, it
     \centering
     \begin{tabular}{ |c|c| } 
         \hline
-        City Count & Path Configurations \\ 
+        \thead{City Count} & \thead{Path Configurations} \\ 
         \hline
         3 & 1 \\
         \hline
@@ -100,6 +113,7 @@ On the other hand approximate algorithms may be find a near optimal, whilst runn
 Hence, in practise, if the optimal is not required, it is suitable to use an approximate algorithm.
 An example of common algorithm which can be applied for finding approximate solutions for TSP is Simulated Annealing.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Simulated Annealing}
@@ -142,7 +156,7 @@ Hence, the introduction of the temperature, and probabilistic acceptance of wors
     \item Else, set $k = k + 1$, and $T_k = r T_k$, then go to Step 2
 \end{enumerate}
 
-\subsection{Temperature and Cooling Rate}
+\subsection{Cooling Rate and Temperature}
 
 The initial temperature of the system determines how likely it is to accept worse solutions.
 As shown in the selection function $\exp(\frac{\Delta f}{T})$ the temperature of the system should be proportional to the possible loss.
@@ -263,12 +277,13 @@ Furthermore, if the number of cities is greater, there may also more local minim
 Hence, we shall try to parameterise the temperature by the weights of the paths, and the cooling rate by the density of the graph.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Implementation}
 
-\subsection{Selection of Controlled Variables}
+\subsection{Controlled Variables}
 
-\textbf{Objective Function}
+\subsubsection{Objective Function}
 
 Given a set of $n$ cities, where $c_{i,j}$ represents the cost of travelling between $i$ and $j$, the objective function is to
 
@@ -277,7 +292,7 @@ $$\text{minimise}\left( \sum_{1 \leq i < n} c_{o_i, o_{i + 1}} + c_{n, 1}\right)
 where $o_i = j$ means that city $j$ is in position $i$ of the path.
 \\
 
-\textbf{Selection Probability}
+\subsubsection{Selection Probability}
 
 Although dependent on the temperature, the selection function penalises the selection of a local possible path configuration proportional to how much worse it is than the current path.
 
@@ -298,32 +313,32 @@ where
     \centering
     \begin{tikzpicture}
         \begin{axis}[
-            width=0.5\textwidth,
-            height=0.4\textwidth,
+            width=0.6\textwidth,
+            height=0.35\textwidth,
             xlabel=Cost of new path configuration,
             ylabel=Probability of being chosen
         ]
         \addplot[
             color=orange,
-            domain=0:15
+            domain=0:20
         ]
         {exp(-x / 10)};
         \addlegendentry{T = 10}
         \addplot[
             color=brown,
-            domain=0:15
+            domain=0:20
         ]
         {exp(-x / 5)};
         \addlegendentry{T = 5}
         \addplot[
             color=red,
-            domain=0:15
+            domain=0:20
         ]
         {exp(-x / 2)};
         \addlegendentry{T = 2}
         \addplot[
             color=black,
-            domain=0:15
+            domain=0:20
         ]
         {exp(-x / 1)};
         \addlegendentry{T = 1}
@@ -335,7 +350,7 @@ where
 As a result, we can see that the greater the energy, the exponentially lower the probability it is chosen, however, the probability is still greater at higher temperatures.
 \\
 
-\textbf{Local Search (2 opt)}
+\subsubsection{Local Search (2 opt)}
 
 It is an important part of the algorithm to determine an algorithm to search for nearby possible solutions.
 A well known method is the \textbf{two-opt} method.
@@ -388,9 +403,82 @@ Hence, in the implementation, the loss of the new path configuration is calculat
 Note that a more optimal method is the LKH (Lin–Kernighan heuristic), however, this is a largely a variation of the two-opt and three-opt method.
 However, because of its difficulty in implementation \cite{helsgaun98}, and the main focus is on the temperature and cooling rate, only two-opt been implemented.
 
+\subsection{Paramterisation}
+
+We need to find a measure of the input that can may have a correlation with the Cooling Rate and Temperature.
+
+Ideally these measures can be calculated quickly in polynomial time or better so that they can be found and then used to create the simulated annealing algorithm before running it.
+
+\subsubsection{Cooling Rate}
+
+As the cooling rate allows for more exploration of nearby path configurations in the local search to prevent being stuck in a local minimum, we need a measure of "how likely it is to be stuck in a local minimum".
+
+Whilst there may be other methods, the \textbf{number of cities will be used}, and finding it is as simple as the code below, which runs in $O(1)$ in python or at max $O(n)$ in a naive implementation.
+
+\begin{verbatim}
+def get_num_cities(cities: list[tuple[int, int]]) -> float:
+    return len(cities)
+\end{verbatim}
+
+\subsubsection{Temperature}
+
+The temperature is relevant for determining the probability of accepting a worse configuration, as the loss from a worse configuration is divided by the temperature to find the probability.
+As a result, the temperature needs to be high enough to accept worse configurations so that the search space is reduced, but so high that the number of iterations is too high.
+\\
+
+Hence, it may be possible to parameterise the temperature with the average distance between cities, which can be calculated in $O(n^2)$ as:
+
+\begin{verbatim}
+from math import dist
+
+def get_city_dist_diff(cities: list[tuple[int, int]]) -> float:
+    n = len(cities)
+    d = [dist(cities[i], cities[j]) for i in range(n-1) for j in range(i+1,n)]
+    return sum(d) / len(d)
+\end{verbatim}
+
+However, initial tests showed zero better optimality from higher temperatures for higher city distances.
+This is because it does not take into consideration the loss function: 
+\\
+Given the city coordinates \texttt{cities}, the ordering of the path \texttt{order} (where the first value is the first city to visit, and the second value the second city to visit, etc), return the change in total path length after applying two-opt between the city \texttt{a} and city \texttt{b}.
+This is implemented as:
+
+\begin{verbatim}
+from math import dist
+
+def loss(cities: list[tuple[int, int]], order: list[int], a: int, b: int) -> float:
+    n = len(cities)
+    a1, a2 = cities[order[a]], cities[order[(a + 1) % n]]
+    b1, b2 = cities[order[b]], cities[order[(b + 1) % n]]
+    curr_dist = dist(a1, a2) + dist(b1, b2)
+    swap_dist = dist(a1, b1) + dist(a2, b2)
+    return swap_dist - curr_dist
+\end{verbatim}
+
+Hence, the return value of the \texttt{loss} function is proportional to the \textbf{difference in distances between the cities}.
+The following code details how this can be found in $O(n^2 \log n)$ which returns the average difference in distances between the cities:
+
+\begin{verbatim}
+from math import dist
+
+def get_diff_city_dist(cities: list[tuple[int, int]]) -> float:
+    n = len(cities)
+    d = sorted([dist(cities[i], cities[j]) for i in range(n-1) for j in range(i+1,n)])
+    m = len(d)
+    
+    prev_diff = sum([x - d[0] for x in d[1:]])
+    total_diff = prev_diff
+    for i in range(1, m):
+        prev_diff = prev_diff - (d[i] - d[i - 1]) * (m - i)
+        total_diff += prev_diff
+    
+    return total_diff / ((m * (m - 1)) / 2)
+\end{verbatim}
+
+\newpage
 \subsection{Code}
 
-For the implementation there are three main python files:
+For the implementation there main code can be found in the \texttt{src/} folder, where the following files have the following purpose:
 
 \begin{itemize}
     \item \texttt{src/solvers.py} 
@@ -407,11 +495,26 @@ For the implementation there are three main python files:
     
     This contains the code to benchmark the \texttt{SimulatedAnnealing} solver.
     It can either load in problems from a file or generate random problems (as detailed later in the report) and tests the \texttt{SimulatedAnnealing} solver with different options for \texttt{temperature} and \texttt{cooling\_rate}.
-
+    The results are then stored in the \texttt{results/} folder.
+    
+    \item \texttt{src/setup.py}
+    
+    This contains the code for reading in the cities from a file in TSPLIB format.
+    It is also contains functions for determining the metrics such as average difference in city distances used for parameterising the Simulated Annealing algorithm.
+    
+    \item \texttt{src/config.py}
+    
+    This contains some configuration variables for both the visualisation and the testing.
+    The testing variables are kept here to prevent import path issues when trying to access them from the Jupyter Notebooks.
+    
 \end{itemize}
 
-The \texttt{data} folder contains different problems taken from the TSPLIB library, where \texttt{.tsp} files contain problem instances, and \texttt{.opt.tour} files contain the optimal tour for the problem.
+The \texttt{data/} folder contains different problems taken from the TSPLIB library, where \texttt{.tsp} files contain problem instances, and \texttt{.opt.tour} files contain the optimal tour for the problem.
+\\
 
+The \texttt{report/} folder contains Jupyter Notebooks for visualising the results and also the \LaTeX code for this report.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Experimentation}
@@ -447,8 +550,8 @@ The following variables were used:
 
 \begin{verbatim}
 TEST_REPEATS = 20
-TEMPERATURES = [10, 50, 100, 500, 1000, 5000]
-COOLING_RATES = [0.999, 0.9995, 0.9999, 0.99995]
+TEMPERATURES = [10, 50, 100, 500, 1_000, 5_000]
+COOLING_RATES = [0.999, 0.999_5, 0.999_9, 0.999_95]
 \end{verbatim}
 
 where \texttt{TEST\_REPEATS} is the number of time each test was repeated, \texttt{TEMPERATURE} is the initial temperature, and \texttt{COOLING\_RATE} is how much the temperature decreases each iteration.
@@ -459,7 +562,7 @@ where \texttt{TEST\_REPEATS} is the number of time each test was repeated, \text
     \centering
     \begin{tabular}{ |c|c|c|c| } 
         \hline
-        Cooling Rate & Mean Optimality & Optimality Std Dev & Mean Iterations \\ 
+        \thead{Cooling Rate} & \thead{Mean Optimality \%} & \thead{Optimality Std Dev} & \thead{Mean Iterations} \\ 
         \hline
         0       & 0.7206 & 0.2151 & 69942 \\
         \hline
@@ -479,7 +582,7 @@ where \texttt{TEST\_REPEATS} is the number of time each test was repeated, \text
     \centering
     \begin{tabular}{ |c|c|c|c| } 
         \hline
-        Temperature & Mean Optimality & Optimality Std Dev & Mean Iterations \\ 
+        \thead{Temperature} & \thead{Mean Optimality \%} & \thead{Optimality Std Dev} & \thead{Mean Iterations} \\ 
         \hline
         0    & 0.7206 & 0.2151 & 69942 \\
         \hline
@@ -501,33 +604,33 @@ where \texttt{TEST\_REPEATS} is the number of time each test was repeated, \text
 
 \begin{figure}[h]
     \centering
-    \begin{tabular}{ |c|c|c|c|c| } 
+    \begin{tabular}{ |c|c|c|c|c|c| } 
         \hline
-        Name & City Count & Avg. City Distance & Avg. Iterations & Avg. Optimality \\ 
+        \thead{Name \\ } & \thead{City \\ Count} & \thead{Avg. City \\ Distance} & \thead{Avg. \\ Iterations} & \thead{Avg. \\ Optimality \%} & \thead{Optimality \\ Std. Dev. \%} \\
         \hline
-        ulysses22.tsp & 22   & 4    & 84003  & 0.9991 \\
+        ulysses22.tsp & 22   & 4    & 84003  & 0.9991 & 0.0061 \\
         \hline
-        att48.tsp     & 48   & 1608 & 17216  & 0.9576 \\
+        att48.tsp     & 48   & 1608 & 17216  & 0.9576 & 0.0224 \\
         \hline
-        berlin52.tsp  & 52   & 282  & 29205  & 0.9342 \\ 
+        berlin52.tsp  & 52   & 282  & 29205  & 0.9342 & 0.0359 \\ 
         \hline
-        rd100.tsp     & 100  & 275  & 32775  & 0.8780 \\
+        rd100.tsp     & 100  & 275  & 32775  & 0.8780 & 0.0446 \\
         \hline
-        ch130.tsp     & 130  & 177  & 39815  & 0.8576 \\
+        ch130.tsp     & 130  & 177  & 39815  & 0.8576 & 0.0437 \\
         \hline
-        ch150.tsp     & 150  & 178  & 40381  & 0.8087 \\
+        ch150.tsp     & 150  & 178  & 40381  & 0.8087 & 0.0470 \\
         \hline
-        tsp225.tsp    & 225  & 91   & 56350  & 0.7502 \\
+        tsp225.tsp    & 225  & 91   & 56350  & 0.7502 & 0.0466 \\
         \hline
-        a280.tsp      & 280  & 61   & 68501  & 0.6757 \\
+        a280.tsp      & 280  & 61   & 68501  & 0.6757 & 0.0424 \\
         \hline
-        pcb442.tsp    & 442  & 872  & 78402  & 0.5924 \\
+        pcb442.tsp    & 442  & 872  & 78402  & 0.5924 & 0.0439 \\
         \hline
-        gr666.tsp     & 666  & 44   & 133338 & 0.6904 \\
+        gr666.tsp     & 666  & 44   & 133338 & 0.6904 & 0.0482 \\
         \hline
-        pr1002.tsp    & 1002 & 3215 & 156407 & 0.4064 \\
+        pr1002.tsp    & 1002 & 3215 & 156407 & 0.4064 & 0.0295 \\
         \hline
-        pr2392.tsp    & 2392 & 3186 & 347207 & 0.2458 \\
+        pr2392.tsp    & 2392 & 3186 & 347207 & 0.2458 & 0.019 \\
         \hline
     \end{tabular}
     \caption{Results of different TSPLIB problems}
@@ -593,10 +696,12 @@ In this new test, rather than using TSPLIB problems, our own data will be produc
 To generate the problem instances, the following variables were used
 
 \begin{verbatim}
-MAP_SIZES = [50, 100, 500, 1000, 1500]
-CITY_COUNTS = [50, 100, 500, 1000, 1500]
-CONST_CITY_COUNT = 100
-CONST_MAP_SIZE = 100
+MAP_COUNT = 4
+TEST_REPEATS = 20
+DIST_DIFFS = [1, 10, 100, 1000, 10_000, 100_000, 1_000_000]
+CITY_COUNTS = [10, 50, 100, 500, 1_000, 5_000, 10_000]
+CONST_CITY_COUNT = 200
+CONST_DIST_DIFF = 20
 \end{verbatim}
 
 where \texttt{MAP\_SIZES} was the maximum value that an x or y coordinate of a city could take, and \texttt{CITY\_COUNT} was the number of cities in a map.
@@ -612,11 +717,10 @@ Then for testing, the a different temperature would be used to
 While the following variables from the original test were changed to be:
 
 \begin{verbatim}
-RAND_TEST_REPEATS = 20
-RAND_TEMPERATURES = [10, 50, 100, 500, 1000]
-RAND_COOLING_RATES = [0.999, 0.9995, 0.999_9, 0.999_95, 0.999_99]
-RAND_CONST_TEMPERATURE = 10
-RAND_CONST_COOLING_RATE = 0.999
+TEMPERATURES = [1, 10, 100, 1_000, 1_00_000, 1_000_000]
+COOLING_RATES = [0, 0.9, 0.99, 0.999, 0.999_9, 0.999_99, 0.999_999]
+CONST_TEMPERATURE = 20
+CONST_COOLING_RATE = 0.995
 \end{verbatim}
 
 \subsubsection{Results}
@@ -624,11 +728,13 @@ RAND_CONST_COOLING_RATE = 0.999
 \subsubsection{Discussion}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Conclusion}
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{References}

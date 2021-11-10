@@ -38,7 +38,6 @@ class Solver(ABC):
             return SimulatedAnnealing(cities)
         raise Exception("Invalid solver name")
 
-
     def get_total_dist(self, order: list[int]) -> float:
         """
         Get the total distance between the cities based off the ordering
