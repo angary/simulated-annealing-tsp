@@ -52,16 +52,11 @@ def normalise_coords(cities: list[tuple[float, float]], height: int, width: int,
     @param width: the maximum width
     @return: a list of normalised city coordinates
     """
-    xs = [c[0] for c in cities]
-    ys = [c[1] for c in cities]
+    xs, ys = tuple(zip(*cities))
 
     # Find minimum and maximum values
-    min_x, max_x = min(xs), max(xs)
-    min_y, max_y = min(ys), max(ys)
-
-    # Convert minimum values to positive if needed
-    min_x = max(-min_x, 0)
-    min_y = max(-min_y, 0)
+    min_x, max_x = abs(min(xs)), max(xs)
+    min_y, max_y = abs(min(ys)), max(ys)
 
     # Find scaling factor
     scale_x = (width - border * 2) / (max_x + min_x)
@@ -90,16 +85,16 @@ def get_diff_city_dist(cities: list[tuple[float, float]]) -> float:
     n = len(cities)
 
     # Generate all combination of distances in sorted order in O(n^2 log n)
-    dists = sorted([dist(cities[i], cities[j]) for i in range(n - 1) for j in range(i + 1, n)])
-    m = n * (n - 1) // 2
+    d = sorted([dist(cities[i], cities[j]) for i in range(n - 1) for j in range(i + 1, n)])
+    m = len(d)
 
     # Find the total difference between the smallest distance and the rest
-    prev_diff = sum([x - dists[0] for x in dists[1:]])
+    prev_diff = sum([x - d[0] for x in d[1:]])
 
     # Loop over the rest of the values calculating total difference
     total_diff = prev_diff
     for i in range(1, m):
-        prev_diff = prev_diff - (dists[i] - dists[i - 1]) * (m - i)
+        prev_diff = prev_diff - (d[i] - d[i - 1]) * (m - i)
         total_diff += prev_diff
 
     # Return the average distance

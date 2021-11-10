@@ -46,13 +46,13 @@
 \begin{document}
 
 % Reduce margin to squeeze everything in
-\newgeometry{margin=1in}
+\newgeometry{total={6in, 9in}}
 
 \maketitle
 \begin{abstract}
     \centering
     In this paper, we explore the impact of different values of initial temperatures and cooling rates for Simulated Annealing.
-    These values are bench marked using the Travelling Salesman Problem, to determine their impact on optimality and runtime. 
+    These values are benchmarked using the Travelling Salesman Problem, to determine their impact on optimality and runtime. 
     Finally, we determine if there is a correlation between the initial temperature and cooling rate with the input cities, and hence a way to parameterise the temperature and cooling rate.
 \end{abstract}
 \tableofcontents
@@ -67,10 +67,10 @@ The travelling salesman is an example of an NP-hard combinatorial optimisation p
 
 It goes as follows:
 \begin{quote}
-Given a weighted graph, starting at a vertex, find the minimal cost to travel to all the vertices of the graph once, before returning back to the starting vertex.
+Given a weighted graph, starting at a vertex, find the minimal cost to travel to all the vertices of the graph once, before returning to the starting vertex.
 \end{quote}
 
-It has many applications, both in practise and theory i.e. in logistics (determining an optimal route of least cost), job scheduling (determine the best way to schedule a series of jobs on a set of machines) and also for bench marking optimisation algorithms
+It has many applications, both in practice and theory i.e. in logistics (determining an optimal route of least cost), job scheduling (determining the best way to schedule a series of jobs on a set of machines) and also benchmarking optimisation algorithms
 \\
 
 The specific purpose of this project is to explore the "Symmetric" Travelling Salesman Problem, where it is an undirected graph, i.e. there is no direction in the graph.
@@ -105,13 +105,13 @@ Due to the difficult nature of solving the TSP, there are two main categories of
     \item Approximate algorithms
 \end{itemize}
 
-Exact algorithms have the benefit that they are able to find the optimal solution.
-For example, the current record for the largest TSP problem is 85 900 cities which was solved using an ILP formulation \cite{cook12}.
+Exact algorithms have the benefit that they can find the optimal solution.
+For example, the current record for the largest TSP problem contained 85 900 cities and was solved using an ILP formulation \cite{cook12}.
 However, they suffer from a longer runtime. \\
 
-On the other hand approximate algorithms may be find a near optimal, whilst running relatively quickly \cite{helsgaun98}.
-Hence, in practise, if the optimal is not required, it is suitable to use an approximate algorithm.
-An example of common algorithm which can be applied for finding approximate solutions for TSP is Simulated Annealing.
+On the other hand, approximate algorithms find a near-optimal, whilst running relatively quickly \cite{helsgaun98}.
+Hence, in practice, if the optimal is not required, it is suitable to use an approximate algorithm.
+An example of a common algorithm that can be applied for finding approximate solutions for TSP is Simulated Annealing.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,12 +122,12 @@ Whilst greedy searches may get stuck in a local minimum, Simulated Annealing aim
 \\
 
 \subsection{Origin}
-It is based off annealing in metallurgy, where the structure of the material changes randomly rapidly. when the temperature is high.
-As a result, at the beginning, SA may choose a solution, even if does not lead to an improvement in the objective function.
+It is based on annealing in metallurgy, where the structure of the material changes randomly rapidly. when the temperature is high.
+As a result, in the beginning, SA may choose a solution, even if does not lead to an improvement in the objective function.
 \\
 
-However, overtime as the temperature drops and loses its internal energy, the structure settles into a more stable form.
-Hence, as the temperature drops, the SA algorithm will with a higher probability discard solutions that do not improve the objective function, and always choosing those that improve the objective function.
+However, over time as the temperature drops and loses its internal energy, the structure settles into a more stable form.
+Hence, as the temperature drops, the SA algorithm will with a higher probability discard solutions that do not improve the objective function and always choose those that improve the objective function.
 \\
 
 Finally, the resulting material structure reaches its absolute (global) minimum internal energy configuration.
@@ -135,7 +135,7 @@ Similarly, the SA algorithm will then find an approximate (or the) solution for 
 \\
 
 Note the temperature and cooling rate has to be carefully selected.
-If the temperature cools too fast, then in the process may get stuck at a local minimum. 
+If the temperature cools too fast, then the process may get stuck at a local minimum. 
 This is similar to what happens in a greedy method, where the search gets stuck in a local minimum.
 Hence, the introduction of the temperature, and probabilistic acceptance of worse states allows for a higher chance of finding the global minimum.
 \\
@@ -199,7 +199,7 @@ The cooling rate on the other hand determines the rate of change of the probabil
 \\
 
 Whilst there are different cooling schedules, geometric cooling tends to perform well compared to other general methods \cite{cooling}.
-This is due to high temperatures at the beginning allowing for more searching, whilst low temperatures later allows it to converge to a solution quickly.
+This is due to high temperatures at the beginning allowing for more searching, whilst low temperatures later allow it to converge to a solution quickly.
 \\
 
 Ignoring other properties, denser materials cool slower.
@@ -353,7 +353,7 @@ As a result, we can see that the greater the energy, the exponentially lower the
 \subsubsection{Local Search (2 opt)}
 
 It is an important part of the algorithm to determine an algorithm to search for nearby possible solutions.
-A well known method is the \textbf{two-opt} method.
+A well-known method is the \textbf{two-opt} method.
 This involves selecting two random cities, re-orders the route between each other so that it does not.
 \\
 
@@ -400,14 +400,14 @@ $$\text{distance}(B, D) + \text{distance}(C, E) < \text{distance}(B, C) + \text{
 which can be calculated in $O(1)$, whilst applying the two-opt runs in $O(n)$.
 Hence, in the implementation, the loss of the new path configuration is calculated first before the path is changed. \\
 
-Note that a more optimal method is the LKH (Lin–Kernighan heuristic), however, this is a largely a variation of the two-opt and three-opt method.
+Note that a more optimal method is the LKH (Lin–Kernighan heuristic), however, this is largely a variation of the two-opt and three-opt methods.
 However, because of its difficulty in implementation \cite{helsgaun98}, and the main focus is on the temperature and cooling rate, only two-opt been implemented.
 
 \subsection{Paramterisation}
 
-We need to find a measure of the input that can may have a correlation with the Cooling Rate and Temperature.
+We need to find a measure of the input that can correlate with the Cooling Rate and Temperature.
 
-Ideally these measures can be calculated quickly in polynomial time or better so that they can be found and then used to create the simulated annealing algorithm before running it.
+Ideally, these measures can be calculated quickly in polynomial time or better so that they can be found and then used to create the simulated annealing algorithm before running it.
 
 \subsubsection{Cooling Rate}
 
@@ -440,7 +440,7 @@ def get_city_dist_diff(cities: list[tuple[int, int]]) -> float:
 However, initial tests showed zero better optimality from higher temperatures for higher city distances.
 This is because it does not take into consideration the loss function: 
 \\
-Given the city coordinates \texttt{cities}, the ordering of the path \texttt{order} (where the first value is the first city to visit, and the second value the second city to visit, etc), return the change in total path length after applying two-opt between the city \texttt{a} and city \texttt{b}.
+Given the city coordinates \texttt{cities}, the ordering of the path \texttt{order} (where the first value is the first city to visit, and the second value the second city to visit, etc), return the change in total path length after applying two-opt between the city \texttt{a} and the city \texttt{b}.
 This is implemented as:
 
 \begin{verbatim}
@@ -500,7 +500,7 @@ For the implementation there main code can be found in the \texttt{src/} folder,
     \item \texttt{src/setup.py}
     
     This contains the code for reading in the cities from a file in TSPLIB format.
-    It is also contains functions for determining the metrics such as average difference in city distances used for parameterising the Simulated Annealing algorithm.
+    It also contains functions for determining the metrics such as average difference in city distances used for parameterising the Simulated Annealing algorithm.
     
     \item \texttt{src/config.py}
     
@@ -520,7 +520,7 @@ The \texttt{report/} folder contains Jupyter Notebooks for visualising the resul
 \section{Experimentation}
 
 \subsection{TSP Dataset Test}
-First the SA algorithm was benchmarked with TSPLIB \cite{tsplib} (a public library for TSP instances) with different initial temperatures and cooling rates.
+First, the SA algorithm was benchmarked with TSPLIB \cite{tsplib} (a public library for TSP instances) with different initial temperatures and cooling rates.
 The problems sets that were used are listed below
 
 \begin{multicols}{6}
@@ -540,7 +540,7 @@ ulysses22.tsp
 \end{verbatim}
 \end{multicols}
 
-To conduct a test, the SA algorithm would be bench marked, with a temperature and cooling rate of 0.
+To conduct a test, the SA algorithm would be benchmarked, with a temperature and cooling rate of 0.
 Then it would be run again with different combinations of temperature and cooling rates.
 All of these tests would then be repeated multiple times as each run of SA can produce very different results.
 The algorithm was then determined to have "finished" after it did not find a better solution after 1000 iterations.
@@ -554,7 +554,7 @@ TEMPERATURES = [10, 50, 100, 500, 1_000, 5_000]
 COOLING_RATES = [0.999, 0.999_5, 0.999_9, 0.999_95]
 \end{verbatim}
 
-where \texttt{TEST\_REPEATS} is the number of time each test was repeated, \texttt{TEMPERATURE} is the initial temperature, and \texttt{COOLING\_RATE} is how much the temperature decreases each iteration.
+where \texttt{TEST\_REPEATS} is the number of times each test was repeated, \texttt{TEMPERATURE} is the initial temperature, and \texttt{COOLING\_RATE} is how much the temperature decreases each iteration.
 
 \subsubsection{Results}
 
@@ -673,16 +673,16 @@ where \texttt{TEST\_REPEATS} is the number of time each test was repeated, \text
 
 \subsubsection{Discussion}
 
-From these results there are a couple observations that we can make
+From these results, there are a couple of observations that we can make
 \begin{itemize}
     \item There is a negative exponential correlation between city count and temperature, however, there was a lack of correlation between city distance and optimality
     \item The higher the cooling rate, the better the optimality, however, there is no benefit to constantly increasing the temperature
     \item There was a logarithmic trend between cooling rate and iterations, and also a logarithmic trend between initial temperature and iterations
 \end{itemize}
 
-However, there are also issues that need to be addressed
+However, some issues need to be addressed
 \begin{itemize}
-    \item gr666.tsp is an outlier, is a dense cluster of cities, whilst the rest are sparsely scattered, resulting in a higher average optimality as despite perhaps having a bad path configuration - because so many cities were close, the change in distance was small)
+    \item gr666.tsp is an outlier, is a dense cluster of cities, whilst the rest are sparsely scattered, resulting in higher average optimality as despite perhaps having a bad path configuration - because so many cities were close, the change in distance was small)
     \item since optimality has a very small correlation with optimality, we cannot tell if a certain temperature increases the optimality for an average city distance unless there is the same number of cities
 \end{itemize}
 
@@ -690,7 +690,7 @@ To get more meaningful results, there needed to be a greater increase in the ran
 The problem set used for the TSP problem also needs to be better controlled, as the impact of temperature on optimality for different temperatures could not be determined as optimality was more dependent on the number of cities.
 
 \subsection{Random Dataset Test}
-In this new test, rather than using TSPLIB problems, our own data will be produced randomly, where we can vary or keep constant variables such as the city count and distance.
+In this new test, rather than using TSPLIB problems, our data will be produced randomly, where we can vary or keep constant variables such as the city count and distance.
 \\
 
 To generate the problem instances, the following variables were used
@@ -704,14 +704,14 @@ CONST_CITY_COUNT = 200
 CONST_DIST_DIFF = 20
 \end{verbatim}
 
-where \texttt{MAP\_SIZES} was the maximum value that an x or y coordinate of a city could take, and \texttt{CITY\_COUNT} was the number of cities in a map.
+where \texttt{MAP\_SIZES} was the maximum value that an x or y coordinate of a city could take, and \texttt{CITY\_COUNT} was the number of cities on a map.
 
 To generate the random problem set, the \texttt{CONST\_CITY\_COUNT} would be used to generate a problem with the other map sizes.
 Then \texttt{CONST\_MAP\_SIZE} would be used to generate a problem with the other city counts.
 This would then result in 10 different maps.
 \\
 
-Then for testing, the a different temperature would be used to 
+Then for testing, a different temperature would be used to 
 \\
 
 While the following variables from the original test were changed to be:

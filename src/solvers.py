@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from copy import deepcopy
 from heapq import heappop, heappush
 from math import dist, factorial
 from random import randrange, shuffle, uniform
@@ -14,8 +13,8 @@ class Solver(ABC):
 
     def __init__(self, cities: list[tuple[int, int]]):
         self.cities = cities
-        self.node_count = len(cities)
-        self.order = [i for i in range(self.node_count)]
+        self.n = len(cities)
+        self.order = [i for i in range(self.n)]
         self.adj = [
             [dist(i, j) if i != j else 0 for i in cities] for j in cities
         ]
@@ -135,8 +134,8 @@ class SimulatedAnnealing(Solver):
         """
         @return: two indexes between 0 and n, where the first is smaller
         """
-        a = randrange(self.node_count)
-        b = randrange(self.node_count)
+        a = randrange(self.n)
+        b = randrange(self.n)
         return (a, b) if a < b else (b, a)
 
     def get_swap_cost(self, a: int, b: int) -> float:
@@ -148,13 +147,11 @@ class SimulatedAnnealing(Solver):
         @param b: the higher index
         @return: the change in distance after the swap
         """
-        # Get distance from a to next val
-        n = self.node_count
+        n, order = self.n, self.order
 
-        a1 = self.order[a]
-        a2 = self.order[(a + 1) % n]
-        b1 = self.order[b]
-        b2 = self.order[(b + 1) % n]
+        # Find which cities a and b are, and their next city
+        a1, a2 = order[a], order[(a + 1) % n]
+        b1, b2 = order[b], order[(b + 1) % n]
 
         # Find the current and new distance
         curr_dist = self.adj[a1][a2] + self.adj[b1][b2]
@@ -179,10 +176,10 @@ class BruteForce(Solver):
 
     def __init__(self, cities):
         super().__init__(cities)
-        self.best_order = [i for i in range(self.node_count)]
+        self.best_order = [i for i in range(self.n)]
 
     def solve(self) -> None:
-        for _ in range(factorial(self.node_count - 1)):
+        for _ in range(factorial(self.n - 1)):
             self.get_next_order()
         return
 
@@ -194,13 +191,13 @@ class BruteForce(Solver):
         """
         order = self.order.copy()
         x = -1
-        for i in range(1, self.node_count - 1):
+        for i in range(1, self.n - 1):
             if order[i] < order[i + 1]:
                 x = i
         if x == -1:
             return []
         y = -1
-        for j in range(self.node_count):
+        for j in range(self.n):
             if order[x] < order[j]:
                 y = j
         order[x], order[y] = order[y], order[x]
@@ -231,15 +228,15 @@ class BranchAndBound(Solver):
         self.adj = [
             [dist(i, j) if i != j else INFTY for i in cities] for j in cities
         ]
-        self.cost = reduce_adj(self.adj, self.node_count)
+        self.cost = reduce_adj(self.adj, self.n)
         adj_arr = self.adj.copy()
-        cost = reduce_adj(adj_arr, self.node_count)
+        cost = reduce_adj(adj_arr, self.n)
         self.paths = [BranchAndBoundPath(adj_arr, cost, [0])]
         self.found_best = False
 
     def solve(self) -> None:
         order = self.get_best_order()
-        while len(order) < self.node_count:
+        while len(order) < self.n:
             order = self.get_best_order()
         return
 
@@ -259,7 +256,7 @@ class BranchAndBound(Solver):
         curr_cost = curr_path.cost
 
         # List of the next possible cities that we can go to
-        next_cities = [i for i in range(self.node_count) if i not in curr_path.order]
+        next_cities = [i for i in range(self.n) if i not in curr_path.order]
 
         # Generate their paths
         for next_node in next_cities:
@@ -268,14 +265,13 @@ class BranchAndBound(Solver):
 
             # Base cost is the cost of travelling from the curr_node to next_node
             base_cost = curr_adj[curr_node][next_node]
-            new_cost = curr_cost + base_cost + reduce_adj(new_adj, self.node_count)
+            new_cost = curr_cost + base_cost + reduce_adj(new_adj, self.n)
 
             new_order = curr_path.order + [next_node]
-
             heappush(self.paths, BranchAndBoundPath(new_adj, new_cost, new_order))
         
         result = self.get_best_order()
-        self.found_best = len(result) == self.node_count
+        self.found_best = len(result) == self.n
         return result
 
     def get_best_order(self) -> list[int]:
@@ -297,23 +293,20 @@ class BranchAndBoundPath:
         return self.cost < other.cost
 
 
-def set_infty(arr: list[list[float]], row_idx: int, col_idx: int) -> list[list[float]]:
+def set_infty(arr: list[list[float]], r: int, c: int) -> list[list[float]]:
     """
     Given a 2D square array and the index of a row and column, return a new list
     where the values of the row and col is now set to infinity
 
     @param arr: 2d list of floats
-    @param row_idx: the row to set to infinity
-    @param col_idx: the col to set to infinity
+    @param r: the row to set to infinity
+    @param c: the col to set to infinity
     @return: the new list with values set to infinity
     """
-    new_arr = deepcopy(arr)
     n = len(arr)
-    for i in range(n):
-        for j in range(n):
-            if i == row_idx or j == col_idx:
-                new_arr[i][j] = INFTY
-    return new_arr
+    return [[INFTY if (i == r or j == c) else arr[i][j] for j in range(n)] for i in range(n)]
+    
+
 
 
 def reduce_adj(arr: list[list[float]], n: int) -> int:
@@ -327,28 +320,18 @@ def reduce_adj(arr: list[list[float]], n: int) -> int:
     total = 0
 
     for i in range(n):
-
-        # Find the minimum value in the row
         row = [val for val in arr[i] if val != INFTY]
-
         if row:
             row_min = min(row)
             total += row_min
-
-            # Subtract it from every value in the row
             for j in range(n):
                 if arr[i][j] != INFTY:
                     arr[i][j] -= row_min
-
     for j in range(n):
-        # Find the minimum value of the column
         col = [arr[i][j] for i in range(n) if arr[i][j] != INFTY]
-
         if col:
             col_min = min(col)
             total += col_min
-
-            # Subtract it from values in column
             for i in range(n):
                 if arr[i][j] != INFTY:
                     arr[i][j] -= col_min
