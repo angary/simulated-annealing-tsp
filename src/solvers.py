@@ -90,7 +90,7 @@ class SimulatedAnnealing(Solver):
         self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
         self.iterations = 0
-        self.max_repeats = 5000
+        self.max_repeats = int(10 * (1 / (1 - self.cooling_rate)))
 
     def solve(self) -> None:
         """

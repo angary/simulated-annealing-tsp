@@ -14,10 +14,10 @@ Variables for the benchmarking (stored here so it can be accessed by ipynb)
 """
 
 MAP_COUNT = 3
-TEST_REPEATS = 20
+TEST_REPEATS = 10
 DIST_DIFFS = [1, 10, 100, 1000, 10_000, 100_000]
 CITY_COUNTS = [10, 50, 100, 500, 1_000, 5_000]
-CONST_CITY_COUNT = 200
+CONST_CITY_COUNT = 400
 CONST_DIST_DIFF = 20
 
 # For Random Dataset testing

@@ -212,7 +212,7 @@ def run_test(filename: str, t: int, r: float) -> dict[str, float]:
 
     # Return a dictionary containing test results
     return {
-        "solver_dist": solver_dist,
+        "distance": solver_dist,
         "temperature": solver.initial_temperature,
         "avg_dist_diff": avg_dist_diff,
         "cooling_rate": solver.cooling_rate,
@@ -251,7 +251,7 @@ def benchmark(filename: str, t: int, r: float) -> dict[str, float]:
     # Return a dictionary containing test results
     return {
         "soln_dist": soln_dist,
-        "solver_dist": solver_dist,
+        "distance": solver_dist,
         "optimality": soln_dist / solver_dist,
         "temperature": solver.initial_temperature,
         "avg_dist_diff": get_diff_city_dist(loaded_cities),

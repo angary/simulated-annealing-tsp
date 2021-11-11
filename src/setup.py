@@ -59,12 +59,12 @@ def normalise_coords(
     xs, ys = tuple(zip(*cities))
 
     # Find minimum and maximum values
-    min_x, max_x = abs(min(xs)), max(xs)
-    min_y, max_y = abs(min(ys)), max(ys)
+    min_x = abs(min(xs))
+    min_y = abs(min(ys))
 
     # Find scaling factor
-    scale_x = (width - border * 2) / (max_x + min_x)
-    scale_y = (height - border * 2) / (max_y + min_y)
+    scale_x = (width - border * 2) / (max(xs) + min_x)
+    scale_y = (height - border * 2) / (max(ys) + min_y)
 
     # Choose the smaller scale to prevent overflow
     scale = min(scale_x, scale_y)
@@ -76,6 +76,19 @@ def normalise_coords(
         normalised_y = height - scale * (c[1] + min_y) - border
         normalised.append((normalised_x, normalised_y))
     return normalised
+
+
+def avg_city_dist(cities: list[tuple[int, int]]) -> float:
+    """
+    Find the sum of the paths between all the cities and then
+    divide it by the number of cities
+
+    @param cities: a list of the coordinates of the cities
+    @return: the average distance between all the cities
+    """
+    n = len(cities)
+    d = [dist(cities[i], cities[j]) for i in range(n - 1) for j in range(i + 1, n)]
+    return sum(d) / len(d)
 
 
 def get_diff_city_dist(cities: list[tuple[float, float]]) -> float:
