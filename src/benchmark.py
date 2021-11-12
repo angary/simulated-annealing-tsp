@@ -20,12 +20,14 @@ def main() -> None:
     filename = args.file
     t = args.temperature
     r = args.cooling_rate
+    test_temp = args.test_temperature or args.test_temperature == args.test_cooling_rate
+    test_cool = args.test_cooling_rate or args.test_temperature == args.test_cooling_rate
 
     if gen_rand_data:
         # Generate random maps
         random.seed(args.seed)
-        files = gen_rand_cities()
-        benchmark_rand(files)
+        files = gen_rand_cities(test_temp, test_cool)
+        # benchmark_rand(files)
     elif filename:
         # If we are given a file, print out the results
         filename = remove_file_extension(filename)
@@ -39,48 +41,52 @@ def main() -> None:
     return
 
 
-def gen_rand_cities() -> dict[str, list[str]]:
+def gen_rand_cities(test_temp: bool, test_cool: bool) -> dict[str, list[str]]:
     """
     Generate a series of random city maps
 
+    @param test_temp: if we create temperature test files
+    @param test_cool: if we create cooling rate test files
     @return: dictionary containing file paths to the cities
     """
 
     # Generate random maps with different city count
     # where they have the same size
     cooling_rate_tests = []
-    for city_count in CITY_COUNTS:
-        for i in range(MAP_COUNT):
-            # Generate random points and find their average distance
-            cities = get_random_cities(1000, 1000, city_count)
+    if test_cool:
+        for city_count in CITY_COUNTS:
+            for i in range(MAP_COUNT):
+                # Generate random points and find their average distance
+                cities = get_random_cities(1000, 1000, city_count)
 
-            # For every city scale their coordinate so they have correct avg dist
-            scale = CONST_DIST_DIFF / get_diff_city_dist(cities)
-            cities = [(i * scale, j * scale) for (i, j) in cities]
+                # For every city scale their coordinate so they have correct avg dist
+                scale = CONST_DIST_DIFF / get_diff_city_dist(cities)
+                cities = [(i * scale, j * scale) for (i, j) in cities]
 
-            filepath = save_cities_into_file(
-                cities, CONST_DIST_DIFF, i, "random cooling rate test"
-            )
-            cooling_rate_tests.append(filepath)
-            print("Cooling rate test: ", filepath)
+                filepath = save_cities_into_file(
+                    cities, CONST_DIST_DIFF, i, "random cooling rate test"
+                )
+                cooling_rate_tests.append(filepath)
+                print("Cooling rate test: ", filepath)
 
     # Generate random maps with different average distances between the cities
     # where they have the same average city distance
-    cities_list = [
-        get_random_cities(1000, 1000, CONST_CITY_COUNT) for _ in range(MAP_COUNT)
-    ]
-    temperature_tests = []
-    for rand_city_dist in DIST_DIFFS:
-        for i, cities in enumerate(cities_list):
-            # Scale the city positions to the desired avg city distance
-            scale = rand_city_dist / get_diff_city_dist(cities)
-            scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
+    if test_temp:
+        cities_list = [
+            get_random_cities(1000, 1000, CONST_CITY_COUNT) for _ in range(MAP_COUNT)
+        ]
+        temperature_tests = []
+        for rand_city_dist in DIST_DIFFS:
+            for i, cities in enumerate(cities_list):
+                # Scale the city positions to the desired avg city distance
+                scale = rand_city_dist / get_diff_city_dist(cities)
+                scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
 
-            filepath = save_cities_into_file(
-                scaled_cities, rand_city_dist, i, "random temperature test"
-            )
-            temperature_tests.append(filepath)
-            print("Temperature test:  ", filepath)
+                filepath = save_cities_into_file(
+                    scaled_cities, rand_city_dist, i, "random temperature test"
+                )
+                temperature_tests.append(filepath)
+                print("Temperature test:  ", filepath)
 
     return {
         "temperature_tests": temperature_tests,
@@ -297,38 +303,40 @@ def parse_args() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-f",
-        "--file",
-        type=str,
-        default=None,
+        "-f", "--file",
+        type=str, default=None,
         help="the filename of the tsp problem - if nothing is specified all files are tested"
     )
     parser.add_argument(
-        "-t",
-        "--temperature",
-        type=int,
-        default=None,
+        "-t", "--temperature",
+        type=int, default=None,
         help="the starting temperature of the system"
     )
     parser.add_argument(
-        "-r",
-        "--cooling-rate",
-        type=int,
-        default=None,
+        "-r", "--cooling-rate",
+        type=int, default=None,
         help="the cooling rate of the system"
     )
     parser.add_argument(
-        "-g",
-        "--gen-rand-data",
+        "-g", "--gen-rand-data",
         action="store_true",
         help="test the algorithm on randomly generated city datasets"
     )
     parser.add_argument(
-        "-s",
-        "--seed",
+        "-s", "--seed",
         type=int,
         default=1,
         help="the seed for generating random maps"
+    )
+    parser.add_argument(
+        "--test-temperature",
+        action="store_true",
+        help="only benchmark different temperatures"
+    )
+    parser.add_argument(
+        "--test-cooling-rate",
+        action="store_true",
+        help="only benchmark different cooling rates"
     )
     return parser.parse_args()
 
