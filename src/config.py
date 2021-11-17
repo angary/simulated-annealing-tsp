@@ -1,6 +1,8 @@
 """
-Visualisation variables
+Module containing variables used in visualisation and testing
 """
+
+# Visualisation variables
 WIDTH = 1280
 HEIGHT = 720
 BORDER = 40
@@ -9,9 +11,7 @@ BEST_PATH_COLOUR = (0, 153, 255)
 CURR_PATH_COLOUR = (75, 75, 75)
 CITY_SIZE = 4
 
-"""
-Variables for the benchmarking (stored here so it can be accessed by ipynb)
-"""
+# Variables for benchmarking - stored here so it is accessible by ipynb files
 MAP_COUNT = 3
 TEST_REPEATS = 20
 DIST_DIFFS = [1, 10, 100, 1_000, 10_000]

@@ -90,7 +90,7 @@ class SimulatedAnnealing(Solver):
     Solver using the simulated annealing algorithm
     """
 
-    def __init__(self, cities, temperature: float = 100, cooling_rate: float = 0.999):
+    def __init__(self, cities, temperature: float = 0, cooling_rate: float = 0.999):
         super().__init__(cities)
         shuffle(self.order)
         self.temperature = temperature
@@ -105,7 +105,7 @@ class SimulatedAnnealing(Solver):
     def solve(self) -> None:
         """
         Continue cooling and finding distance until the optimal distance has
-        not changed after self.max_repeats iterations
+        not changed after self.__max_repeats iterations
         """
         repeat = 0
         lowest_dist = float("inf")
@@ -119,9 +119,7 @@ class SimulatedAnnealing(Solver):
         self.solved = True
 
     def get_next_order(self) -> list[int]:
-        # Lower the temperature
         self.__iterations += 1
-
         self.temperature = self.temperature * self.cooling_rate
 
         # Find new order

@@ -56,6 +56,7 @@ def setup() -> None:
     """
     size(WIDTH, HEIGHT)
     background(*BG_COLOUR)
+    no_fill()
 
 
 def draw() -> None:
@@ -82,7 +83,6 @@ def draw() -> None:
     while new_order == order:
         new_order = solver.get_next_order()
     order = new_order
-    print(solver.get_total_dist(order))
     if not order:
         no_loop()
 
