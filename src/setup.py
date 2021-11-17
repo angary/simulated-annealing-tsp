@@ -1,3 +1,8 @@
+"""
+Module containing functions to generate or load in cities, along with other
+functions for adjusting the coordinates of the cities
+"""
+
 from __future__ import annotations
 
 from math import dist

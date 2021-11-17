@@ -1,0 +1,8 @@
+[MAIN]
+
+disable=
+    invalid-name,
+    unused-wildcard-import,
+    wildcard-import,
+    global-statement,
+    function-redefined,

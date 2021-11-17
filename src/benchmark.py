@@ -1,3 +1,8 @@
+"""
+Contains code to benchmark the SimulatedAnnealing solver against TSPLIB instances
+or randomly generated TSP problems
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -15,6 +20,10 @@ from src.solvers import SimulatedAnnealing
 
 
 def main() -> None:
+    """
+    Parse command line arguments and test SA solver on random cities, all the
+    TSPLIB instances, or one TSP instance
+    """
     args = parse_args()
     gen_rand_data = args.gen_rand_data
     filename = args.file
@@ -38,7 +47,6 @@ def main() -> None:
     else:
         # Else run tests on all the problems, and write results to results folder
         benchmark_tsplib()
-    return
 
 
 def gen_rand_cities(test_temp: bool, test_cool: bool) -> dict[str, list[str]]:
@@ -97,7 +105,7 @@ def gen_rand_cities(test_temp: bool, test_cool: bool) -> dict[str, list[str]]:
 def save_cities_into_file(
     cities: list[tuple[float, float]],
     size: int,
-    i: int,
+    map_num: int,
     comment: str = ""
 ) -> str:
     """
@@ -105,12 +113,12 @@ def save_cities_into_file(
 
     @param cities: A list of the coordinates of the cities
     @param size: the average difference in distance between all the cities
-    @param i: integer represented the number of repeats
+    @param map_num: integer representing the number of the map with same size and city counts
     @param comment: the comment to add in the file
     @return: the path to the file
     """
     n = len(cities)
-    name = f"rand{n}_{size}_{i}"
+    name = f"rand{n}_{size}_{map_num}"
     filename = f"data/{name}.tsp"
     with open(filename, "w+") as f:
         f.writelines([
@@ -143,7 +151,6 @@ def benchmark_rand(files: dict[str, list[str]]) -> None:
         for cr in COOLING_RATES:
             results = [run_test(data_file, CONST_TEMPERATURE, cr) for _ in range(TEST_REPEATS)]
             print(write_results(data_file.removeprefix("data/"), CONST_TEMPERATURE, cr, results))
-    return None
 
 
 def benchmark_tsplib() -> None:
@@ -173,7 +180,6 @@ def benchmark_tsplib() -> None:
             for r in COOLING_RATES:
                 results = [benchmark(data_file, t, r) for _ in range(TEST_REPEATS)]
                 print(write_results(problem, t, r, results))
-    return
 
 
 def write_results(problem: str, t: float, r: float, results: list[dict[str, float]]) -> str:
@@ -223,7 +229,7 @@ def run_test(filename: str, t: int, r: float) -> dict[str, float]:
         "avg_dist_diff": avg_dist_diff,
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.n,
-        "iterations": solver.iterations - solver.max_repeats,
+        "iterations": solver.iterations,
         "map_num": map_num,
     }
 
@@ -263,7 +269,7 @@ def benchmark(filename: str, t: int, r: float) -> dict[str, float]:
         "avg_dist_diff": get_diff_city_dist(loaded_cities),
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.n,
-        "iterations": solver.iterations - solver.max_repeats,
+        "iterations": solver.iterations,
     }
 
 
@@ -324,8 +330,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "-s", "--seed",
-        type=int,
-        default=1,
+        type=int, default=1,
         help="the seed for generating random maps"
     )
     parser.add_argument(

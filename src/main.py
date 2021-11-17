@@ -1,3 +1,7 @@
+"""
+Driver code for the solving visualisation
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -23,6 +27,9 @@ speed = 1
 
 
 def main() -> None:
+    """
+    Setup the solver, load or generate the cities, and then start the visualisation
+    """
     global city_count, cities, order, solver
 
     args = parse_args()
@@ -44,13 +51,17 @@ def main() -> None:
 
 
 def setup() -> None:
+    """
+    Set up the size of the window and background colour
+    """
     size(WIDTH, HEIGHT)
     background(*BG_COLOUR)
-    fill(*BEST_PATH_COLOUR)
-    no_fill()
 
 
 def draw() -> None:
+    """
+    Draw out each frame
+    """
     global order, iteration
     iteration += 1
     background(*BG_COLOUR)
@@ -65,7 +76,7 @@ def draw() -> None:
         draw_cities()
     # Speed up drawing
     for _ in range(city_count * speed):
-        solver.get_next_order()    
+        solver.get_next_order()
     # Get next ordering
     new_order = order
     while new_order == order:
@@ -96,7 +107,7 @@ def key_pressed(event) -> None:
     elif event.key == "c":
         # TODO: Show cities if it is paused
         global show_cities
-        show_cities = not show_cities    
+        show_cities = not show_cities
     elif event.key == "LEFT":
         # Halve the speed
         speed = max(1, speed // 2)
@@ -132,6 +143,11 @@ def draw_path(ordering: list[int]) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """
+    Parse command line arguments
+
+    @return an object containing parsed arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-c", "--city-count",
@@ -146,7 +162,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-f", "--file",
         type=str, default=None,
-        help="the filename of the tsp problem - if none is selected, then a random problem is generated"
+        help="the tsp filename - if none is selected, then generate a random problem"
     )
     return parser.parse_args()
 

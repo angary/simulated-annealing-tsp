@@ -1,3 +1,9 @@
+"""
+Module containing class implementations of different TSP solver algorithms.
+The classes extend an abstract Solver class, which contains abstract method
+solve(), get_next_order(), and get_best_order()
+"""
+
 from __future__ import annotations
 
 import math
@@ -10,7 +16,9 @@ INFTY = float("inf")
 
 
 class Solver(ABC):
-
+    """
+    Abstract class to be extended by other solvers
+    """
     def __init__(self, cities: list[tuple[int, int]]):
         self.cities = cities
         self.n = len(cities)
@@ -89,8 +97,10 @@ class SimulatedAnnealing(Solver):
         self.cooling_rate = cooling_rate
         self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
-        self.iterations = 0
-        self.max_repeats = int(10 * (1 / (1 - self.cooling_rate)))
+        self.solved = False
+        self.__iterations = 0
+        self.__max_repeats = int(10 * (1 / (1 - self.cooling_rate)))
+        self.__acceptance = []
 
     def solve(self) -> None:
         """
@@ -99,20 +109,19 @@ class SimulatedAnnealing(Solver):
         """
         repeat = 0
         lowest_dist = float("inf")
-        while repeat < self.max_repeats:
+        while repeat < self.__max_repeats:
             self.get_next_order()
             if self.curr_dist < lowest_dist:
                 repeat = 0
                 lowest_dist = self.curr_dist
             else:
                 repeat += 1
-        return
+        self.solved = True
 
     def get_next_order(self) -> list[int]:
         # Lower the temperature
-        self.iterations += 1
+        self.__iterations += 1
 
-        # TODO: Tweak the temperature cooling based off number of cities
         self.temperature = self.temperature * self.cooling_rate
 
         # Find new order
@@ -121,10 +130,16 @@ class SimulatedAnnealing(Solver):
         prob = 0 if (loss <= 0 or self.temperature <= 0) else math.exp(-loss / self.temperature)
 
         # If new distance shorter, or within probability then use it
-        if loss <= 0 or uniform(0, 1) < prob:
+        if loss <= 0:
             self.two_opt(a, b)
             self.curr_dist = self.get_total_dist(self.order)
-
+        else:
+            if uniform(0, 1) < prob:
+                self.__acceptance.append(True)
+                self.two_opt(a, b)
+                self.curr_dist = self.get_total_dist(self.order)
+            else:
+                self.__acceptance.append(False)
         return self.order
 
     def get_best_order(self) -> list[int]:
@@ -169,6 +184,27 @@ class SimulatedAnnealing(Solver):
         """
         self.order = self.order[:a + 1] + self.order[b:a:-1] + self.order[b + 1:]
 
+    @property
+    def iterations(self) -> int:
+        """
+        @return the current number of iterations, else if solved return the number
+                of iterations required to converge to the solution
+        """
+        if self.solved:
+            return self.__iterations - self.__max_repeats
+        return self.__iterations
+
+    @property
+    def acceptance_ratio(self) -> float:
+        """
+        @return the current acceptance ratio of the solver else if solved, return
+                the acceptance ratio before it could not find a better solution
+        """
+        end = 1 if not self.solved else self.__max_repeats
+        acceptances = self.__acceptance[:-end]
+        return acceptances.count(True) / len(acceptances)
+
+
 ################################################################################
 
 
@@ -179,12 +215,11 @@ class BruteForce(Solver):
 
     def __init__(self, cities):
         super().__init__(cities)
-        self.best_order = [i for i in range(self.n)]
+        self.best_order = list(range(self.n))
 
     def solve(self) -> None:
         for _ in range(factorial(self.n - 1)):
             self.get_next_order()
-        return
 
     def get_next_order(self) -> list[int]:
         """
