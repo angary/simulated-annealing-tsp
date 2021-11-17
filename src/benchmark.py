@@ -36,7 +36,7 @@ def main() -> None:
         # Generate random maps
         random.seed(args.seed)
         files = gen_rand_cities(test_temp, test_cool)
-        # benchmark_rand(files)
+        benchmark_rand(files)
     elif filename:
         # If we are given a file, print out the results
         filename = remove_file_extension(filename)
@@ -79,11 +79,11 @@ def gen_rand_cities(test_temp: bool, test_cool: bool) -> dict[str, list[str]]:
 
     # Generate random maps with different average distances between the cities
     # where they have the same average city distance
+    temperature_tests = []
     if test_temp:
         cities_list = [
             get_random_cities(1000, 1000, CONST_CITY_COUNT) for _ in range(MAP_COUNT)
         ]
-        temperature_tests = []
         for rand_city_dist in DIST_DIFFS:
             for i, cities in enumerate(cities_list):
                 # Scale the city positions to the desired avg city distance
