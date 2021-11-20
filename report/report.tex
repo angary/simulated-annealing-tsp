@@ -70,10 +70,10 @@ It goes as follows:
 Given a weighted graph, starting at a vertex, find the minimal cost to travel to all the vertices of the graph once, before returning to the starting vertex.
 \end{quote}
 
-It has many applications, both in practice and theory i.e. in logistics (determining an optimal route of least cost), job scheduling (determining the best way to schedule a series of jobs on a set of machines) and also benchmarking optimisation algorithms
+It has many applications, both in practice and theory, for example in logistics (determining an optimal route of least cost), job scheduling (determining the best way to schedule a series of jobs on a set of machines) and also benchmarking optimisation algorithms
 \\
 
-The specific purpose of this project is to explore the "Symmetric" Travelling Salesman Problem, where it is an undirected graph, i.e. there is no direction in the graph.
+The specific purpose of this project is to explore the "Symmetric" Travelling Salesman Problem, the graph is undirected (the weight along a path / edge is the same regardless of direction).
 Whilst this halves the number of solutions as compared to the asymmetric TSP, it still has a super-polynomial running time as the number of solutions for $n$ cities is $(n - 1)! / 2$.
 
 \begin{figure}[h]
@@ -107,11 +107,16 @@ Due to the difficult nature of solving the TSP, there are two main categories of
 
 Exact algorithms have the benefit that they can find the optimal solution.
 For example, the current record for the largest TSP problem contained 85 900 cities and was solved using an ILP formulation \cite{cook12}.
-However, they suffer from a longer runtime. \\
+However, they generally suffer from a longer runtime.
+\\
 
 On the other hand, approximate algorithms find a near-optimal, whilst running relatively quickly \cite{helsgaun98}.
 Hence, in practice, if the optimal is not required, it is suitable to use an approximate algorithm.
-An example of a common algorithm that can be applied for finding approximate solutions for TSP is Simulated Annealing.
+An example of a common algorithm that can be applied for finding approximate solutions is SA (Simulated Annealing).
+\\
+
+Note TSP can be solved efficiently deterministically through cutting plane algorithms, and approximately through the Lin-Kernighan heuristic.
+The goal of experimenting with SA is mostly out of curiosity and interest, however may reveal insights into the SA algorithm in general.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,6 +124,9 @@ An example of a common algorithm that can be applied for finding approximate sol
 \section{Simulated Annealing}
 Simulated Annealing is a stochastic global search optimisation algorithm.
 Whilst greedy searches may get stuck in a local minimum, Simulated Annealing aims to overcome this by probabilistically accepting worse options, and has a higher chance of finding the global minimum.
+
+In the context of TSP, we start with a random solution, and then try different "similar" solutions.
+We then choose to accept this new "similar" solution based off the SA algorithm, and continue this process, until we have not found better similar solutions.
 \\
 
 \subsection{Origin}
@@ -131,7 +139,7 @@ Hence, as the temperature drops, the SA algorithm will with a higher probability
 \\
 
 Finally, the resulting material structure reaches its absolute (global) minimum internal energy configuration.
-Similarly, the SA algorithm will then find an approximate (or the) solution for maximising the objective function.
+Similarly, the SA algorithm will then find an approximate (or the) optimal solution for maximising the objective function.
 \\
 
 Note the temperature and cooling rate has to be carefully selected.
@@ -152,8 +160,8 @@ Hence, the introduction of the temperature, and probabilistic acceptance of wors
         \exp {\left( \frac{\Delta f}{T_k} \right)} & else
     \end{dcases*}
     $$
-    \item If we have reached the max iterations, then stop
-    \item Else, set $k = k + 1$, and $T_k = r T_k$, then go to Step 2
+    \item If we have reached the max iterations, then stop.
+    \item Else, set $k = k + 1$, and $T_k = r T_k$, then go to Step 2.
 \end{enumerate}
 
 \subsection{Cooling Rate and Temperature}
@@ -161,6 +169,7 @@ Hence, the introduction of the temperature, and probabilistic acceptance of wors
 The initial temperature of the system determines how likely it is to accept worse solutions.
 As shown in the selection function $\exp(\frac{\Delta f}{T})$ the temperature of the system should be proportional to the possible loss.
 Hence, \textbf{the temperature should be proportional to the values of the loss function} to retain the same probability of choosing a worse configuration.
+Typically a temperature is chosen that will result in an acceptance ratio of 0.8 \cite{initial-temperature}.
 
 \begin{figure}[H]
     \centering
@@ -191,7 +200,7 @@ Hence, \textbf{the temperature should be proportional to the values of the loss 
         \addlegendentry{$T = 200 \times 0.995^x$}
         \end{axis}
     \end{tikzpicture}
-    \caption{Comparison of different initial temperatures}
+    \caption{Comparison initial temperatures cooling over time}
 \end{figure}
 
 
@@ -203,8 +212,8 @@ Whilst there are different cooling schedules, geometric cooling tends to perform
 This is due to high temperatures at the beginning allowing for more searching, whilst low temperatures later allow it to converge to a solution quickly.
 \\
 
-Ignoring other properties, denser materials cool slower.
-If the TSP behaves like so, \textbf{the greater the number of cities, the slower the system should cool} as it is "denser".
+Taking inspiration from nature, ignoring other properties, denser materials cool slower.
+If the TSP behaves like so, \textbf{the greater the number of cities, the slower the system should cool} as it is "denser" in the number of cities.
 Furthermore, if the number of cities is greater, there may also more local minimums, which can be mitigated by slower cooling.
 
 \begin{figure}[H]
@@ -233,7 +242,8 @@ Furthermore, if the number of cities is greater, there may also more local minim
             \addlegendentry{Exponential}
             \addplot[
                 color=black,
-                domain=1:100
+                domain=1:100,
+                samples=100
             ]
             {350/(1 + 10 * log10(1 + x))};
             \addlegendentry{Logarithmic}
@@ -265,7 +275,8 @@ Furthermore, if the number of cities is greater, there may also more local minim
             \addlegendentry{$T = 100 \times 0.99^x$}
             \addplot[
                 color=black,
-                domain=1:800
+                domain=1:800,
+                samples=100
             ]
             {100 * 0.95^x};
             \addlegendentry{$T = 100 \times 0.95^x$}
@@ -285,7 +296,7 @@ Furthermore, if the number of cities is greater, there may also more local minim
 
 \subsubsection{Objective Function}
 
-Given a set of $n$ cities, where $c_{i,j}$ represents the cost of travelling between $i$ and $j$, the objective function is to
+Given a set of $n$ cities, where $c_{i,j}$ represents the cost of travelling between $i$ and $j$, we aim to find $O = \langle o_1, o_2, ..., o_n \rangle$ such that we 
 
 $$\text{minimise}\left( \sum_{1 \leq i < n} c_{o_i, o_{i + 1}} + c_{n, 1}\right)$$
 
@@ -321,28 +332,28 @@ where
         \addplot[
             color=orange,
             domain=0:20,
-            samples=100
+            samples=50
         ]
         {exp(-x / 10)};
         \addlegendentry{T = 10}
         \addplot[
             color=brown,
             domain=0:20,
-            samples=100
+            samples=50
         ]
         {exp(-x / 5)};
         \addlegendentry{T = 5}
         \addplot[
             color=red,
             domain=0:20,
-            samples=100
+            samples=50
         ]
         {exp(-x / 2)};
         \addlegendentry{T = 2}
         \addplot[
             color=black,
             domain=0:20,
-            samples=100
+            samples=50
         ]
         {exp(-x / 1)};
         \addlegendentry{T = 1}
@@ -351,7 +362,8 @@ where
     \caption{Relationship between change in path cost and probability of selection}
 \end{figure}
 
-As a result, we can see that the greater the energy, the exponentially lower the probability it is chosen, however, the probability is still greater at higher temperatures.
+We can see that the greater the temperature, the higher the probability of choosing a worse configuration.
+However, the greater the loss, the exponentially lower the probability of acceptance.
 \\
 
 \subsubsection{Local Search (2 opt)}
@@ -426,15 +438,15 @@ max_iterations = 10 // (1 - cooling_rate)
             xlabel=Cooling Rate,
             xmode=log,
             ylabel=Max Repeats,
-            ymode=log
+            ymode=log,
         ]
         \addplot[
             color=black,
             domain=0.9:0.99999,
-            samples=200
+            samples=60
         ]
-        {10 / (1 - x)};
-        \addlegendentry{y = 10 / (1 - x)}
+        {50 / (1 - x)};
+        \addlegendentry{y = 50 / (1 - x)}
         \end{axis}
     \end{tikzpicture}
     \caption{Maximum repeats for each cooling rate}
@@ -444,7 +456,7 @@ max_iterations = 10 // (1 - cooling_rate)
 
 We need to find a measure of the input that can correlate with the Cooling Rate and Temperature.
 
-Ideally, these measures can be calculated quickly in polynomial time or better so that they can be found and then used to create the simulated annealing algorithm before running it.
+Ideally, these measures can be calculated quickly in polynomial time or better so that they can be found and then used to parameterise the Simulated Annealing algorithm before running it.
 
 \subsubsection{Cooling Rate}
 
@@ -469,10 +481,8 @@ As a result, the temperature needs to be high enough to accept worse configurati
 Hence, it may be possible to parameterise the temperature with the average distance between cities.
 
 However, initial tests showed zero better optimality from higher temperatures for higher city distances.
-\\
-
 This is because it does not take into consideration the loss function: 
-
+\\
 Given the city coordinates \texttt{cities}, the ordering of the path \texttt{order} (where the first value is the first city to visit, and the second value the second city to visit, etc), return the change in total path length after applying two-opt between the city \texttt{a} and the city \texttt{b}.
 This is implemented as:
 
@@ -500,7 +510,7 @@ Given that $X_0$ is often to be a value of around $0.8 - 0.9$, and $\ln(0.8)^{-1
 \\
 
 Whilst, there are several methods to calculate the average positive transition cost \cite{initial-temperature}, they rely on samples from running SA multiple times.
-The following code details how the average difference in distances (which is also the average positive transition cost) can be found in $O(n^2 \log n)$ using a dynamic programming approach:
+The following code details how the average difference in distances (which is also the average positive transition cost) can be found in $O(n^2 \log n)$ using a dynamic programming (sliding window) approach:
 
 \begin{verbatim}
 from math import dist
@@ -740,9 +750,44 @@ However, some issues need to be addressed
 To get more meaningful results, there needed to be a greater increase in the range of the cooling rate to determine the limit of a higher cooling rate.
 The problem set used for the TSP problem also needs to be better controlled, as the impact of temperature on optimality for different temperatures could not be determined as optimality was more dependent on the number of cities.
 
+\newpage
 \subsection{Random Dataset Test}
-In this new test, rather than using TSPLIB problems, our data will be produced randomly, where we can vary or keep constant variables such as the city count and distance.
 
+Rather than experimenting with well known TSP problems such as those found in TSPLIB, the SA was tested using randomly generated cities.
+The reasoning is that variables such as distances or city count can be controlled well whilst the other values are adjusted.
+\\
+
+As a result, specific maps could be generated for testing temperature (where the city count was kept the same, but differences in distance increased) and maps could be generated for testing cooling rate (where differences in distance was kept the same, but the city count was increased).
+\\
+
+To conduct the tests, the following variables were used:
+
+\begin{verbatim}
+MAP_COUNT = 4
+TEST_REPEATS = 20
+DIST_DIFFS = [1, 10, 100, 1_000, 10_000]
+CITY_COUNTS = [10, 30, 100, 300, 1_000, 3_000]
+CONST_CITY_COUNT = 400
+CONST_DIST_DIFF = 20
+
+TEMPERATURES = [0, 1, 10, 100, 1_000, 10_000]
+COOLING_RATES = [0, 0.9, 0.99, 0.999, 0.999_9, 0.999_99]
+CONST_TEMPERATURE = 40
+CONST_COOLING_RATE = 0.9999
+\end{verbatim}
+
+where
+
+\begin{itemize}
+    \item \texttt{MAP\_COUNT} was the number of different generated maps for each test
+    \item \texttt{TEST\_REPEATS} was how many times a test would be repeated with the same map, initial temperature and cooling rate
+    \item \texttt{DIST\_DIFFS} is an array of the difference in distances between cities, used with \texttt{CONST\_CITY\_COUNT} to generate \texttt{MAP\_COUNT} maps for testing temperature
+    \item \texttt{CITY\_COUNTS} is an array of the different number of cities, used with \texttt{CONST\_DIST\_DIFF} to generate \texttt{MAP\_COUNT} maps for testing cooling rate
+    \item \texttt{TEMPERATURES} is an array of the different initial temperatures used, whilst \texttt{CONST\_COOLING\_RATE} was the cooling rate that was kept constant across the temperature tests
+    \item \texttt{COOLING\_RATES} is an array of the different cooling rates used, whilst \texttt{CONST\_TEMPERATURE} was the temperature that was kept constant across the cooling rate tests
+\end{itemize}
+
+\newpage
 \subsubsection{Results}
 
 There was a very good trend between the a slower cooling rate and a more optimal solution, and more iterations.
@@ -751,63 +796,102 @@ There was a very good trend between the a slower cooling rate and a more optimal
     \centering
     \begin{subfigure}{0.5\textwidth}
         \centering
+        \includegraphics[width=1\linewidth]{images/rand_cooling_rate_city_count_distance.jpg}
+        \caption{Absolute final distances}
+        \label{fig:sub1}
+    \end{subfigure}%
+    \begin{subfigure}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{images/rand_cooling_rate_city_count_iterations.jpg}
+        \caption{Absolute iterations}
+        \label{fig:sub2}
+    \end{subfigure}
+    \captionsetup{justification=centering}
+    \label{rand-cooling-rate}
+    \caption{Absolute comparison between final distances, and iterations, for different $r$}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \centering
         \includegraphics[width=1\linewidth]{images/rand_cooling_rate_city_count_distance_relative.jpg}
-        \caption{Cooling temp optimality for city count}
+        \caption{Relative final distance}
         \label{fig:sub1}
     \end{subfigure}%
     \begin{subfigure}{0.5\textwidth}
         \centering
         \includegraphics[width=1\linewidth]{images/rand_cooling_rate_city_count_iterations_relative.jpg}
-        \caption{Optimality for each cooling rate}
+        \caption{Relative iterations}
         \label{fig:sub2}
     \end{subfigure}
     \captionsetup{justification=centering}
     \label{rand-cooling-rate}
-    \caption{Relative comparison between optimality, city counts, and cooling rate \\ where $T_0$ = 40 and average difference in distances = 20}
+    \caption{Relative comparison between final distances, and iterations, for different $r$}
 \end{figure}
 
+An initial test was conducted for different $T_0$ and average difference in distances for $r = 0.995, n = 400$.
+This resulted in little to no trend between the final distance.
+Hence, another test was conducted where $r = 0.995, n = 800$.
+\\
 
-However, there was little correlation between the starting temperature and average difference in distances.
-
+Both these tests resulted in negligible trends, and their results are shown below.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}{0.5\textwidth}
+    \begin{subfigure}{0.45\textwidth}
         \centering
         \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_distance_relative_400.jpg}
-        \caption{Cooling temp optimality for city count}
-        \label{fig:sub1}
+        \caption{Relative final distance, where $n = 400$}
     \end{subfigure}%
-    \begin{subfigure}{0.5\textwidth}
+    \begin{subfigure}{0.45\textwidth}
         \centering
-        \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_iterations_relative_400.jpg}
-        \caption{Optimality for each cooling rate}
-        \label{fig:sub2}
+        \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_distance_relative_800.jpg}
+        \caption{Relative final distance, where $n = 800$}
     \end{subfigure}
     \captionsetup{justification=centering}
-    \caption{Relative comparison between optimality, average difference in distances, and temperature \\ where $r$ = 0.995 and city count = 400}
+    \caption{Relative comparison between final distances, and iterations, for different $T_0$}
 \end{figure}
 
-As a result, the tests for temperature were run again, increasing the city count to 800, whilst keeping the temperature the same.
+The reasoning for this was assumed to be the fast cooling rate, meaning that the temperature cooled too fast towards a low level, essentially rendering the initial temperature irrelevant.
+Hence, another test was conducted, where $r = 0.9999$, and $n = 400$.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}{0.5\textwidth}
+    \begin{subfigure}{0.45\textwidth}
         \centering
-        \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_distance_relative_800.jpg}
-        \caption{Cooling temp optimality for city count}
+        \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_distance.jpg}
+        \caption{Final distance for different }
         \label{fig:sub1}
     \end{subfigure}%
-    \begin{subfigure}{0.5\textwidth}
+    \begin{subfigure}{0.45\textwidth}
         \centering
-        \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_iterations_relative_800.jpg}
+        \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_iterations.jpg}
         \caption{Optimality for each cooling rate}
         \label{fig:sub2}
     \end{subfigure}
     \captionsetup{justification=centering}
-    \caption{Comparison between optimality, average difference in distances, and temperature \\ where $r$ = 0.995 and city count = 800}
+    \caption{Absolute comparison between final distances, and iterations, for different $T_0$}
 \end{figure}
 
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_distance_relative.jpg}
+        \caption{Final distance for different }
+        \label{fig:sub1}
+    \end{subfigure}%
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{images/rand_temperature_avg_dist_diff_iterations_relative.jpg}
+        \caption{Optimality for each cooling rate}
+        \label{fig:sub2}
+    \end{subfigure}
+    \captionsetup{justification=centering}
+    \caption{Relative comparison between final distances, and iterations, for different $T_0$}
+\end{figure}
 
 \subsubsection{Discussion}
 
@@ -853,15 +937,22 @@ Note $r$ is the cooling rate and $n$ is the number of cities.
     \caption{Plot comparison between cooling rate and iterations}
 \end{figure}
 
-The optimality of the solution would be increased with a slower cooing rate.
-However, for small number of cities, slowing the cooling rate was not as effective as that for higher cities.
-Overall this trend follows that of a logistic curve, where if we let $y$ be the relative optimality and $r' = -\log_{10}(1 - r)$
+Overall, having a slower cooling rate allowed us to find a more optimal solution.
+This increase in optimality would be even more pronounced for greater city counts - as it was likely that a greedy solution on average would get stuck in a local minimum.
+\\
+
+However, there seemed to be a limit of how much better a Simulated Annealing solution could be compared to a greedy method, and this limit would be proportional to the city count.
+\\
+
+Overall this trend follows that of a logistic curve, where if we take $r' = -\log_{10}(1 - r)$, i.e. if $r = 0.9$, then $r' = 1$, if $r = 0.99$, then $r' = 2$, and so on, the relative optimality could be determined by the function
+
+$$f(r', n) = \frac{L}{1 + e^{-k(r'-r'_0)}}$$
 
 \begin{figure}[H]
     \centering
     \begin{tikzpicture}
         \begin{axis}[
-            width=0.6\textwidth,
+            width=0.65\textwidth,
             height=0.3\textwidth,
             xlabel=Cooling Rate,
             ylabel={Relative Optimality},
@@ -869,49 +960,165 @@ Overall this trend follows that of a logistic curve, where if we let $y$ be the 
             ytick=\empty,
             legend pos=north west
         ]
-        \addplot%
-        [
-            blue,%
+        \addplot[
+            blue,
             mark=none,
-            samples=200,
-            domain=0:2000,
+            samples=50,
+            domain=0:2000
         ]
         (x,{10/(1+exp(-0.005 * (x - 1000)))});
-        \addlegendentry{$y = \frac{L}{1 + e^{-k(r' - r_0)}}$}
+        \addlegendentry[text depth=0.7em]{$f(r', n) = \frac{L}{1 + e^{-k\left(r' - r_0'\right)}}$}
         \end{axis}
     \end{tikzpicture}
     \caption{Example of a logistic curve}
 \end{figure}
 
 where
+
 \begin{itemize}
     \item $L$ is the curve's maximum value. \\
     Whilst this is an unreachable asymptote, it's value for a city count above 30 can be predicted to be
     $$L \approx 0.45 + 4^{\log_{10}(n) - 1.5}$$
     
-    \item $r_0$ is the $r'$ value of the sigmoid point. \\
-    As a result, $r_0 = r_1 / 2$ if at cooling rate $r_1$ we reach close to the highest possible optimality (or the asymptote), and so is around
-    $$r_0 \approx \log_{10}(n) - 1$$
+    \item $r_0'$ is the $r'$ value of the sigmoid point. \\
+    As a result, $r_0' = r_1' / 2$ if at cooling rate $r_1'$ we reach close to the highest possible optimality (or the asymptote), and so is around
+    $$r_0' \approx \log_{10}(n) - 1$$
     
     \item $k$ is the logistic growth rate or steepness of the curve. \\
     We need to ensure that at a cooling rate of 0 will result in a relative optimality of 1, i.e. $f(r = 0, n) = 1$ and hence
-    $$1 = \frac{L}{1 + e^{-k(r' - r_0)}} \approx \frac{0.45 + 4^{\log_{10}(n) - 1.5}}{1 + e^{-k(-\log_{10}(n) - 1)}}$$
+    
+    $$1 = \frac{L}{1 + e^{-k(r' - r_0')}} \approx \frac{0.45 + 4^{\log_{10}(n) - 1.5}}{1 + e^{-k(-\log_{10}(n) - 1)}}.$$
+    
+    Therefore, 
     \begin{align*}
         1 + e^{-k(-\log_{10}(n) - 1)}
             &\approx 0.45 + 4^{\log_{10}(n) - 1.5} \\
         -k(-\log_{10}(n) - 1)
             &\approx \ln(4^{\log_{10}(n) - 1.5} - 0.55) \\
         k
-            &\approx \frac{\ln(4^{\log_{10}(n) - 1.5} - 0.55)}{\log_{10}(n) - 1}
+            &\approx \frac{\ln(4^{\log_{10}(n) - 1.5} - 0.55)}{\log_{10}(n) - 1}.
     \end{align*}
 \end{itemize}
 
 This can be pieced together to form a prediction of the relative optimality based off the cooling rate and city count.
-More importantly though, this can be used to predict the point at which have a slower cooling rate results in a negligible increase in relative optimality.
-This value tended to be around 
-$$r = -100^{-log_{10}(n)+1}+1.$$
+\\
+
+More importantly though, this can be used to determine the point at which a slower cooling rate results in a lesser increase in optimality. 
+Whilst the inflection point of the curve can be used (which is also $r'_0$), it tends to be around half of the optimal value that can be achieved.
+Another value that can be used is finding the value of $r'$ that produces the lowest value in the second derivative (this value also represents the value of the "maximal growth period").
+\\
+
+That being said, these calculations are highly dependent on the experimental results and resulted in very convoluted equations.
+Something more suitable may have been an approximation that produces around $80 - 90\%$ of the optimal solution.
+This value tended can be determined as
+$$r \approx 1 - 100^{-log_{10}(n)+1}.$$
+
+
+% DERIVATIVE STUFF WHICH DEPENDED TOO HARD ON EXPERIMENT VALUES
+% As shown in the graph below, it correlates to around $80 - 90\%$ of the maximal optimal value that can be achieved.
+
+% \begin{align*}
+%     f &= \frac{L}{1 + e^{-k(r' - r'_0)}} \\
+%     \frac{\partial f}{\partial r} &= -\frac{Lke^{-k\left(-r'+r'_0\right)}}{\left(1+e^{-k\left(r'_0-r'\right)}\right)^2} \\
+%     \frac{\partial^2 f}{\partial r^2} &= -\frac{Lk^2e^{-2k\left(r'_0-r'\right)}\left(e^{k\left(r'_0-r'\right)}-1\right)}{\left(1+e^{-k\left(r'_0-r'\right)}\right)^3} \\
+% \end{align*}
+
+
+% \begin{figure}[H]
+%     \centering
+%     \begin{tikzpicture}
+%         \begin{axis}[
+%             width=1\textwidth,
+%             height=0.4\textwidth,
+%             xtick=\empty,
+%             ytick={0},
+%             legend pos=north west,
+%             ymajorgrids=true,
+%             grid style=dashed
+%         ]
+%         % \draw (1.5,0) -- (1.5,1);
+%         \addplot[
+%             black,
+%             mark=none,
+%             samples=100,
+%         ]
+%         (x, {1/(1+exp(-x)))});
+%         \addlegendentry{$f$}
+%         \addplot[
+%             gray,
+%             mark=none,
+%             samples=100,
+%         ]
+%         (x, {
+%             1 * (1/(1+exp(-x))))*(1-(1/(1+exp(-x)))))
+%         });
+%         \addlegendentry{$\frac{\partial f}{\partial r'}$}
+%         \addplot[
+%             blue,
+%             mark=none,
+%             samples=100,
+%         ]
+%         (x, {
+%             10 * exp(-2 * x) * (-exp(x)+1) / ((1+exp(-x))^3)
+%         });
+%         \addlegendentry{$\frac{\partial^2 f}{\partial r'^2}$}
+%         % \draw[dotted] (axis cs:\pgfkeysvalueof{/pgfplots/xmin},0) -- (axis cs:\pgfkeysvalueof{/pgfplots/xmax},0);
+%         \end{axis}
+%     \end{tikzpicture}
+% \end{figure}
+
+% Finding the value of $r$ that produces the lowest value of $\frac{\partial^2 f}{\partial r^2}$ is the larger value of which the third derivative is equal to 0.
+% This can be calculated by substituted our determined values of $L, k, r'_0$ into the equation
+
+% $$
+%     \frac{\partial^3 f}{\partial r'^3}
+%     = -\frac{
+%         Lk^3e^{-3k\left(r'_0-r'\right)}\left(e^{2k\left(r'_0-r'\right)}-4e^{k\left(r'_0-r'\right)}+1\right)
+%     }{
+%         \left(1+e^{-k\left(r'_0-r'\right)}\right)^4
+%     }
+%     = 0.
+% $$
+
+% This can be simplified to finding
+
+% \begin{align*}
+%     e^{2k\left(r'_0-r'\right)} - 4e^{k\left(r'_0-r'\right)}+1 &= 0 \\
+%     \ln(2k\left(r'_0-r'\right)) &= 4\ln(k\left(r'_0-r'\right)) \\
+%     2k\left(r'_0-r'\right) &= (k\left(r'_0-r'\right))^4 \\
+%     \frac{2}{k^3} &= (r'_0 - r')^3 \\
+%     \frac{\sqrt[3]{2}}{k} &= (r'_0 - r')
+% \end{align*}
+
+
+The number of iterations increased linearly with the city count where,
+$$\text{if } r = 0, \: \text{iterations} \approx 10n.$$
 
 There was a clear trend between a slower cooling rate and an increase in the number of iterations.
+
+This is because with a slower cooling rate, the temperature remains higher for longer.
+For example, if the starting temperature was $T_0$, the following number of iterations are required to reach a portion of the initial temperature.
+
+\begin{figure}[h]
+    \centering
+    \begin{tabular}{ |c|c|c| } 
+        \hline
+        \thead{Cooling Rate} & \thead{Iterations to \\reach $0.1T_0$} & \thead{Iterations to \\ reach $0.01T_0$} \\ 
+        \hline
+        0.9     & 22     & 44 \\
+        \hline
+        0.99    & 230    & 459 \\
+        \hline
+        0.999   & 2302   & 4603 \\ 
+        \hline
+        0.9999  & 23025  & 46050 \\
+        \hline
+        0.99999 & 230258 & 460515 \\
+        \hline
+    \end{tabular}
+    \caption{Number of iterations required to lower the temperature by a certain percent}
+\end{figure}
+
 
 \begin{figure}[H]
     \centering
@@ -954,19 +1161,140 @@ There was a clear trend between a slower cooling rate and an increase in the num
         \end{tikzpicture}
     \end{subfigure}
     \captionsetup{justification=centering}
-    \caption{Raw comparison between cooling rate and iterations}
+    \caption{Raw comparison between cooling rate and iterations from experiments}
 \end{figure}
 
 Whilst there aren't enough points to verify, if the relative iterations grow polynomially or exponentially, it can be determined that the increase in iterations scales faster than the optimality.
-Hence, at least for cooling rates in the range $0 - 0.99999$, you do not recieve a greater increase in optimality relative to the increase in iterations from slowing the cooling rate.
+\\
 
+Hence, at least for cooling rates in the range $0 - 0.99999$, you do not receive a greater increase in optimality relative to the increase in iterations from slowing the cooling rate.
+\\
+
+Interestingly, the relative increase in iterations from the experimental results for each cooling rate are lower than those required for the temperature to reach a certain percentage of it's initial temperature.
+This suggests that the solution starts to converge before at different temperatures for different cooling rates.
+\\
+
+\newpage
+\textbf{Temperature}
+
+Relative optimality in the final distance by changing the temperature was mostly negligible compared to changing the cooling rate.
+However, each $T_0$ typically produced it's best final distance, if it was equal to the average difference in distances between the cities. 
+Higher temperatures also tended to provide better results, however they also resulted in a greater number of iterations.
+\\
+
+\begin{figure}[H]
+    \centering
+    \begin{tabular}{ |c|c|c|c|c|c| } 
+        \hline
+        & \thead{$\Delta d = 10^0$} & \thead{$\Delta d = 10^1$} & \thead{$\Delta d = 10^2$} & \thead{$\Delta d = 10^3$} & \thead{$\Delta d =  10^4$} \\
+        \hline
+        $T_0 = 0$     & 1.0026 & 1.0029 & 1.0090 & 1.0059 & 1.0022 \\
+        \hline
+        $T_0 = 10^{0}$ & 0.9976 & 1.0066 & 1.0019 & 1.0004 & 0.9996 \\
+        \hline
+        $T_0 = 10^{1}$ & 1.0016 & 1.0016 & 1.0021 & 1.0054 & 1.0016 \\
+        \hline
+        $T_0 = 10^{2}$ & 1.0014 & 0.9982 & 0.9975 & 0.9998 & 1.0067 \\
+        \hline
+        $T_0 = 10^{3}$ & 1.0012 & 0.9972 & 0.9945 & 0.9932 & 0.9960 \\
+        \hline
+        $T_0 = 10^{4}$ & 0.9957 & 0.9934 & 0.9950 & 0.9953 & 0.9939 \\
+        \hline
+
+    \end{tabular}
+    \caption{Table comparison between relative final distance and temperature}
+\end{figure}
+
+Overall, a better conclusion may have been determined if there were more tests, though there is already previous research to suggest that a value of $T_0$ relative to the average loss is ideal \cite{initial-temperature}.
+\\
+
+Interestingly, if the temperature was very high relative to the average difference in distance between the cities, it underwent a lot of iterations.
+However, as the average distance between cities increased, the number of iterations decreased, despite the number of cities remaining the same.
+\\
+
+This is because when the temperature is too high, a worse configuration is more or less always accepted.
+As a result, it does not converge to a solution.
+
+% Absolute final distance
+% [42, 418, 4213, 42085, 419304]
+% [42, 420, 4184, 41856, 418217]
+% [42, 418, 4185, 42066, 419023]
+% [42, 416, 4165, 41829, 421186]
+% [42, 416, 4153, 41553, 416699]
+% [41, 414, 4155, 41642, 415816]
+
+
+% Absolute iterations
+% [155246, 164317, 158142, 156586, 161710]
+% [170466, 167416, 160263, 167435, 162576]
+% [190929, 178171, 162828, 160157, 162728]
+% [232048, 191272, 184628, 160661, 156337]
+% [241440, 220734, 197058, 175823, 162193]
+% [259319, 248302, 224802, 199270, 169206]
+
+% Relative final distance
+% [1.0026, 1.0029, 1.0090, 1.0059, 1.0022]
+% [0.9976, 1.0066, 1.0019, 1.0004, 0.9996]
+% [1.0016, 1.0016, 1.0021, 1.0054, 1.0016]
+% [1.0014, 0.9982, 0.9975, 0.9998, 1.0067]
+% [1.0012, 0.9972, 0.9945, 0.9932, 0.9960]
+% [0.9957, 0.9934, 0.9950, 0.9953, 0.9939]
+
+
+% Relative iterations
+% [0.7455, 0.8425, 0.8723, 0.9212, 0.9954]
+% [0.8186, 0.8584, 0.8840, 0.9850, 1.0007]
+% [0.9169, 0.9135, 0.8982, 0.9422, 1.0017]
+% [1.1143, 0.9807, 1.0184, 0.9451, 0.9623]
+% [1.1594, 1.1318, 1.087-, 1.0343, 0.9984]
+% [1.2453, 1.2731, 1.2400, 1.1723, 1.0415]
+
+\\
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Conclusion}
+Whilst there are faster and more optimal algorithms for TSP, we noted that the cooling rate could be parameterised off the number of cities, and the temperature by the average distance between the cities.
+\\
 
+Overall the cooling rate had a much bigger impact than the temperature on both the final distance found, and the number of iterations.
+Slower cooling rates and higher initial temperatures often resulted in lower final distances, however also resulted in high iterations and hence solving time.
+\\
+
+Whilst slower cooling rates resulted in better solutions, there was a limit of how much better it could be relative to the greedy solution.
+Hence, there was a point at which slowing the cooling rate more resulted in a negligible increase in optimality.
+Whilst not experimented with, this is likely also the case with increasing the temperature, however, there is little purpose for doing so as there is comparatively small benefit from increasing the temperature.
+\\
+
+A suitable value of the cooling rate that provided around $90\%$ of the most optimal solution could be calculated as 
+$$r \approx 1 - 100^{-\log_{10}(n) + 1}.$$
+
+A suitable value of the temperature was one that was proportional to the average difference in distance of the cities.
+This could be calculated in $O(n\log n)$ using a sliding window approach in the following pseudo code:
+
+\begin{verbatim}
+from math import dist
+
+def get_diff_city_dist(cities: list[tuple[int, int]]) -> float:
+    n = len(cities)
+    d = sorted([dist(cities[i], cities[j]) for i in range(n-1) for j in range(i+1,n)])
+    m = len(d)
+    
+    prev_diff = sum([x - d[0] for x in d[1:]])
+    total_diff = prev_diff
+    for i in range(1, m):
+        prev_diff = prev_diff - (d[i] - d[i - 1]) * (m - i)
+        total_diff += prev_diff
+    
+    return total_diff / ((m * (m - 1)) / 2)
+\end{verbatim}
+
+Unfortunately the runtime was not tested the experimentation as it may have been sensitive to the testing environment.
+However, it would be interesting to see the runtime relative to the rest of the parameters, as may not scale exactly with iterations.
+This is because the runtime of an iteration would be $O(n)$ if it accepts a new configuration, else $O(1)$.
+As a result, this would also give insight into details such as how the probability of accepting a different configuration changes with temperature, and the current optimality of the solution.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
