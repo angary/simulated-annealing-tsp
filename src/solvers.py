@@ -99,7 +99,7 @@ class SimulatedAnnealing(Solver):
         self.curr_dist = self.get_total_dist(self.order)
         self.solved = False
         self.__iterations = 0
-        self.__max_repeats = int(10 * (1 / (1 - self.cooling_rate)))
+        self.__max_repeats = int(100 * (1 / (1 - self.cooling_rate)))
         self.__acceptance = []
 
     def solve(self) -> None:
