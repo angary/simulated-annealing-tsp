@@ -6,11 +6,12 @@ solve(), get_next_order(), and get_best_order()
 
 from __future__ import annotations
 
-import math
 from abc import ABC, abstractmethod
 from heapq import heappop, heappush
-from math import dist, factorial
+from math import dist, exp, factorial, log10
 from random import randrange, shuffle, uniform
+
+from src.setup import get_diff_city_dist
 
 INFTY = float("inf")
 
@@ -19,7 +20,7 @@ class Solver(ABC):
     """
     Abstract class to be extended by other solvers
     """
-    def __init__(self, cities: list[tuple[int, int]]):
+    def __init__(self, cities: list[tuple[float, float]]):
         self.cities = cities
         self.n = len(cities)
         self.order = list(range(self.n))
@@ -90,17 +91,16 @@ class SimulatedAnnealing(Solver):
     Solver using the simulated annealing algorithm
     """
 
-    def __init__(self, cities, temperature: float = 0, cooling_rate: float = 0.999):
+    def __init__(self, cities, t: float = -1, r: float = -1):
         super().__init__(cities)
         shuffle(self.order)
-        self.temperature = temperature
-        self.cooling_rate = cooling_rate
+        self.temperature = get_diff_city_dist(cities) if t == -1 else t
+        self.cooling_rate = 1 - 100 ** (-log10(self.n) + 1) if r == -1 else r
         self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
         self.solved = False
         self.__iterations = 0
         self.__max_repeats = int(100 * (1 / (1 - self.cooling_rate)))
-        self.__acceptance = []
 
     def solve(self) -> None:
         """
@@ -125,19 +125,12 @@ class SimulatedAnnealing(Solver):
         # Find new order
         a, b = self.get_two_cities()
         loss = self.get_swap_cost(a, b)
-        prob = 0 if (loss <= 0 or self.temperature <= 0) else math.exp(-loss / self.temperature)
+        prob = 0 if (loss <= 0 or self.temperature <= 0) else exp(-loss / self.temperature)
 
         # If new distance shorter, or within probability then use it
-        if loss <= 0:
+        if loss <= 0 or uniform(0, 1) < prob:
             self.two_opt(a, b)
             self.curr_dist = self.get_total_dist(self.order)
-        else:
-            if uniform(0, 1) < prob:
-                self.__acceptance.append(True)
-                self.two_opt(a, b)
-                self.curr_dist = self.get_total_dist(self.order)
-            else:
-                self.__acceptance.append(False)
         return self.order
 
     def get_best_order(self) -> list[int]:
@@ -191,16 +184,6 @@ class SimulatedAnnealing(Solver):
         if self.solved:
             return self.__iterations - self.__max_repeats
         return self.__iterations
-
-    @property
-    def acceptance_ratio(self) -> float:
-        """
-        @return the current acceptance ratio of the solver else if solved, return
-                the acceptance ratio before it could not find a better solution
-        """
-        end = 1 if not self.solved else self.__max_repeats
-        acceptances = self.__acceptance[:-end]
-        return acceptances.count(True) / len(acceptances)
 
 
 ################################################################################

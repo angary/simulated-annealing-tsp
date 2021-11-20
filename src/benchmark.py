@@ -217,7 +217,7 @@ def run_test(filename: str, t: int, r: float) -> dict[str, float]:
     map_num = int("".join([c for c in filename.split("_")[2] if c.isdigit()]))
 
     # Get solver's solution
-    solver = SimulatedAnnealing(loaded_cities, temperature=t, cooling_rate=r)
+    solver = SimulatedAnnealing(loaded_cities, t, r)
     solver.solve()
     solver_order = solver.get_best_order()
     solver_dist = solver.get_total_dist(solver_order)
@@ -253,7 +253,7 @@ def benchmark(filename: str, t: int, r: float) -> dict[str, float]:
     soln_order = load_soln(soln_file)
 
     # Get the solver's solution
-    solver = SimulatedAnnealing(loaded_cities, temperature=t, cooling_rate=r)
+    solver = SimulatedAnnealing(loaded_cities, t, r)
     solver.solve()
     solver_order = solver.get_best_order()
 
