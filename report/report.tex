@@ -59,7 +59,6 @@
 \restoregeometry
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Introduction}
 \subsection{The Travelling Salesman Problem}
@@ -118,7 +117,6 @@ An example of a common algorithm that can be applied for finding approximate sol
 Note TSP can be solved efficiently deterministically through cutting plane algorithms, and approximately through the Lin-Kernighan heuristic.
 The goal of experimenting with SA is mostly out of curiosity and interest, however may reveal insights into the SA algorithm in general.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Simulated Annealing}
@@ -288,7 +286,6 @@ Furthermore, if the number of cities is greater, there may also more local minim
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Implementation}
 
@@ -421,12 +418,12 @@ However, because of its difficulty in implementation \cite{helsgaun98}, and the 
 \subsubsection{Max Iterations}
 
 There also has to be a way of determining when the solver has found what it considers the optimal solution.
-The current implementations allows for the SA to continue iterating until it iterated \texttt{max\_iterations} times without finding a better solution.
-From initial tests, it was possible for a slow cooling rate to have a very optimal solution before converging and then not find a better solution for many iterations.
-Hence, the function to find a suitable \texttt{max\_iterations} gives a higher number of \texttt{max\_repeats} proportional to the cooling rate, and it is implemented as:
+Currently we allows SA to continue until it iterated \texttt{max\_iterations} times without finding a better solution.
+From initial tests, it was possible for a slow cooling rate to have a very optimal solution before converging and then not find a better solution for many iterations \footnote{In hindsight, this should have been a function of the number of cities, as it would have allowed for longer iterations for greedy solutions}.
+% Hence, the function to find a suitable \texttt{max\_iterations} gives a higher number of \texttt{max\_repeats} proportional to the cooling rate, and it is implemented as:
 
 \begin{verbatim}
-max_iterations = 10 // (1 - cooling_rate)
+max_iterations = 50 // (1 - cooling_rate)
 \end{verbatim}
 
 \begin{figure}[H]
@@ -575,7 +572,6 @@ The \texttt{data/} folder contains different problems taken from the TSPLIB libr
 
 The \texttt{report/} folder contains Jupyter Notebooks for visualising the results and also the source code for this report.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Experimentation}
@@ -1013,7 +1009,6 @@ Something more suitable may have been an approximation that produces around $80 
 This value tended can be determined as
 $$r \approx 1 - 100^{-log_{10}(n)+1}.$$
 
-
 % DERIVATIVE STUFF WHICH DEPENDED TOO HARD ON EXPERIMENT VALUES
 % As shown in the graph below, it correlates to around $80 - 90\%$ of the maximal optimal value that can be achieved.
 
@@ -1214,15 +1209,32 @@ However, as the average distance between cities increased, the number of iterati
 
 This is because when the temperature is too high, a worse configuration is more or less always accepted.
 As a result, it does not converge to a solution.
+By subtracting the iterations from the highest initial temperature $T_0 = 10000$, from the greedy solution, we can determine at which temperature the solution converges.
 
-% Absolute final distance
-% [42, 418, 4213, 42085, 419304]
-% [42, 420, 4184, 41856, 418217]
-% [42, 418, 4185, 42066, 419023]
-% [42, 416, 4165, 41829, 421186]
-% [42, 416, 4153, 41553, 416699]
-% [41, 414, 4155, 41642, 415816]
+The table below shows for each column, the temperature after the number of extra iterations it took for the initial temperature to find the solution compared to the greedy solution.
+Only $T_0 = 10^4$, and $T_0 = 10^3$ was used as these temperatures had the more stable results.
 
+\begin{figure}[H]
+    \centering
+    \begin{tabular}{ |c|c|c| } 
+        \hline
+        \thead{$\Delta d$} & \thead{$T_0 = 10^3$} & \thead{$T_0 = 10^4$} \\
+        \hline
+        $10^{0}$ & 0.1805 & 0.3019 \\
+        \hline
+        $10^{1}$ & 3.5453 & 2.2511 \\
+        \hline
+        $10^{2}$ & 20.409 & 12.731 \\
+        \hline
+        $10^{3}$ & 146.05 & 494.62 \\
+        \hline
+        $10^{4}$ & 952.85 & 4725.4 \\
+        \hline
+    \end{tabular}
+    \caption{Temperature after which the number of iterations was the same as $T_0 = 0$}
+\end{figure}
+
+The key takeaway is that the point at which the solution started converging was on the same magnitude as the average distance between the cities.
 
 % Absolute iterations
 % [155246, 164317, 158142, 156586, 161710]
@@ -1232,27 +1244,7 @@ As a result, it does not converge to a solution.
 % [241440, 220734, 197058, 175823, 162193]
 % [259319, 248302, 224802, 199270, 169206]
 
-% Relative final distance
-% [1.0026, 1.0029, 1.0090, 1.0059, 1.0022]
-% [0.9976, 1.0066, 1.0019, 1.0004, 0.9996]
-% [1.0016, 1.0016, 1.0021, 1.0054, 1.0016]
-% [1.0014, 0.9982, 0.9975, 0.9998, 1.0067]
-% [1.0012, 0.9972, 0.9945, 0.9932, 0.9960]
-% [0.9957, 0.9934, 0.9950, 0.9953, 0.9939]
 
-
-% Relative iterations
-% [0.7455, 0.8425, 0.8723, 0.9212, 0.9954]
-% [0.8186, 0.8584, 0.8840, 0.9850, 1.0007]
-% [0.9169, 0.9135, 0.8982, 0.9422, 1.0017]
-% [1.1143, 0.9807, 1.0184, 0.9451, 0.9623]
-% [1.1594, 1.1318, 1.087-, 1.0343, 0.9984]
-% [1.2453, 1.2731, 1.2400, 1.1723, 1.0415]
-
-\\
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Conclusion}
@@ -1295,9 +1287,9 @@ Unfortunately the runtime was not tested the experimentation as it may have been
 However, it would be interesting to see the runtime relative to the rest of the parameters, as may not scale exactly with iterations.
 This is because the runtime of an iteration would be $O(n)$ if it accepts a new configuration, else $O(1)$.
 As a result, this would also give insight into details such as how the probability of accepting a different configuration changes with temperature, and the current optimality of the solution.
+Another important note discovered towards was that the \texttt{max\_repeats} has a significant impact on the optimality of a solution.
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{References}
