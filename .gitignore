@@ -148,6 +148,8 @@ cython_debug/
 # Latex stuff
 report/*
 !report/*.tex
+!report/report.pdf
+!report/images*
 !report/*.ipynb
 
 .vscode/
