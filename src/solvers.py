@@ -11,8 +11,6 @@ from heapq import heappop, heappush
 from math import dist, exp, factorial, log10
 from random import randrange, shuffle, uniform
 
-from src.setup import get_diff_city_dist
-
 INFTY = float("inf")
 
 
@@ -94,13 +92,46 @@ class SimulatedAnnealing(Solver):
     def __init__(self, cities, t: float = -1, r: float = -1):
         super().__init__(cities)
         shuffle(self.order)
-        self.temperature = get_diff_city_dist(cities) if t == -1 else t
-        self.cooling_rate = 1 - 100 ** (-log10(self.n) + 1) if r == -1 else r
+        self.temperature = self.get_diff_city_dist(cities) if t == -1 else t
+        if r != -1:
+            self.cooling_rate = r
+        else:
+            self.cooling_rate = 1 - 100 ** (-log10(self.n) + 1) if self.n != 0 else r
         self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
         self.solved = False
         self.__iterations = 0
         self.__max_repeats = int(100 * (1 / (1 - self.cooling_rate)))
+
+    @staticmethod
+    def get_diff_city_dist(cities: list[tuple[float, float]]) -> float:
+        """
+        Get the distances between all the cities, and then return the
+        average difference of the distances
+
+        @param cities: a list of the coordinates of the cities
+        @return: the average difference in distances between the cities
+        """
+        if cities == []:
+            return 0
+        
+        n = len(cities)
+
+        # Generate all combination of distances in sorted order in O(n^2 log n)
+        d = sorted([dist(cities[i], cities[j]) for i in range(n - 1) for j in range(i + 1, n)])
+        m = len(d)
+
+        # Find the total difference between the smallest distance and the rest
+        prev_diff = sum([x - d[0] for x in d[1:]])
+
+        # Loop over the rest of the values calculating total difference
+        total_diff = prev_diff
+        for i in range(1, m):
+            prev_diff = prev_diff - (d[i] - d[i - 1]) * (m - i)
+            total_diff += prev_diff
+
+        # Return the average distance
+        return total_diff / ((m * (m - 1)) / 2)
 
     def solve(self) -> None:
         """

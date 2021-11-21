@@ -15,7 +15,7 @@ from src.config import \
     CITY_COUNTS, DIST_DIFFS, MAP_COUNT, \
     CONST_CITY_COUNT, CONST_DIST_DIFF, \
     CONST_TEMPERATURE, CONST_COOLING_RATE
-from src.setup import get_diff_city_dist, get_random_cities, load_cities
+from src.setup import get_random_cities, load_cities
 from src.solvers import SimulatedAnnealing
 
 
@@ -68,7 +68,7 @@ def gen_rand_cities(test_temp: bool, test_cool: bool) -> dict[str, list[str]]:
                 cities = get_random_cities(1000, 1000, city_count)
 
                 # For every city scale their coordinate so they have correct avg dist
-                scale = CONST_DIST_DIFF / get_diff_city_dist(cities)
+                scale = CONST_DIST_DIFF / SimulatedAnnealing.get_diff_city_dist(cities)
                 cities = [(i * scale, j * scale) for (i, j) in cities]
 
                 filepath = save_cities_into_file(
@@ -87,7 +87,7 @@ def gen_rand_cities(test_temp: bool, test_cool: bool) -> dict[str, list[str]]:
         for rand_city_dist in DIST_DIFFS:
             for i, cities in enumerate(cities_list):
                 # Scale the city positions to the desired avg city distance
-                scale = rand_city_dist / get_diff_city_dist(cities)
+                scale = rand_city_dist / SimulatedAnnealing.get_diff_city_dist(cities)
                 scaled_cities = [(i * scale, j * scale) for (i, j) in cities]
 
                 filepath = save_cities_into_file(
@@ -266,7 +266,7 @@ def benchmark(filename: str, t: int, r: float) -> dict[str, float]:
         "distance": solver_dist,
         "optimality": soln_dist / solver_dist,
         "temperature": solver.initial_temperature,
-        "avg_dist_diff": get_diff_city_dist(loaded_cities),
+        "avg_dist_diff": SimulatedAnnealing.get_diff_city_dist(loaded_cities),
         "cooling_rate": solver.cooling_rate,
         "city_count": solver.n,
         "iterations": solver.iterations,

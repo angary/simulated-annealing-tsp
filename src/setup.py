@@ -94,30 +94,3 @@ def avg_city_dist(cities: list[tuple[int, int]]) -> float:
     n = len(cities)
     d = [dist(cities[i], cities[j]) for i in range(n - 1) for j in range(i + 1, n)]
     return sum(d) / len(d)
-
-
-def get_diff_city_dist(cities: list[tuple[float, float]]) -> float:
-    """
-    Get the distances between all the cities, and then return the
-    average difference of the distances
-
-    @param cities: a list of the coordinates of the cities
-    @return: the average difference in distances between the cities
-    """
-    n = len(cities)
-
-    # Generate all combination of distances in sorted order in O(n^2 log n)
-    d = sorted([dist(cities[i], cities[j]) for i in range(n - 1) for j in range(i + 1, n)])
-    m = len(d)
-
-    # Find the total difference between the smallest distance and the rest
-    prev_diff = sum([x - d[0] for x in d[1:]])
-
-    # Loop over the rest of the values calculating total difference
-    total_diff = prev_diff
-    for i in range(1, m):
-        prev_diff = prev_diff - (d[i] - d[i - 1]) * (m - i)
-        total_diff += prev_diff
-
-    # Return the average distance
-    return total_diff / ((m * (m - 1)) / 2)
