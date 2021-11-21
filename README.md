@@ -77,7 +77,7 @@ Unfortunately, (to of my knowledge) this may not work with WSL.
 
 Overall the benefit from implementing SA was quite negligible.
 The calculation for max iterations was not ideal in the testing - which I believe resulted in skewed results (mostly for calculating the ideal cooling rate).
-If you are interested in viewing the results, they can be seen in the conclusion of the report.
+If you are interested in viewing the results, they can be seen in the conclusion of the report [here](https://github.com/angary/simulated-annealing-tsp/blob/cs4121-submission/report/report.pdf).
 
 
 ### What can I do to contribute?
