@@ -73,9 +73,12 @@ If you would like to create your own instance of the TSP problem and visualise i
 This project uses the [p5py](https://github.com/p5py/p5) library for visualisation.
 Unfortunately, (to of my knowledge) this may not work with WSL.
 
-### What are the results of your research?
+### What are the results of your experimentation?
 
-Idk. Still working on it.
+Overall the benefit from implementing SA was quite negligible.
+The calculation for max iterations was not ideal in the testing - which I believe resulted in skewed results (mostly for calculating the ideal cooling rate).
+If you are interested in viewing the results, they can be seen in the conclusion of the report.
+
 
 ### What can I do to contribute?
 
