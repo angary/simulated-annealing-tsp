@@ -96,7 +96,7 @@ class SimulatedAnnealing(Solver):
         if r != -1:
             self.cooling_rate = r
         else:
-            self.cooling_rate = 1 - 100 ** (-log10(self.n) + 1) if self.n != 0 else r
+            self.cooling_rate = 1 - 100 ** (-log10(self.n) + 1) if self.n != 0 else 0
         self.initial_temperature = self.temperature
         self.curr_dist = self.get_total_dist(self.order)
         self.solved = False

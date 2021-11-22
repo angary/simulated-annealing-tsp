@@ -82,8 +82,6 @@ If you are interested in viewing the results, they can be seen in the conclusion
 
 ### What can I do to contribute?
 
-Pog.
-
 This is more of a "what I would I do if I have more time" but whatever, let's say you actually are interested.
 Disclaimer - the code isn't particularly polished (from me pivoting project ideas multiple times).
 
